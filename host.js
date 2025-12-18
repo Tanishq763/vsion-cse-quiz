@@ -192,7 +192,7 @@ function startQuiz() {
     const q = questions[index];
 
     // Push question to Firebase
-    db.ref("quiz").set({
+    db.ref("vsion-cse-quiz").set({
         index,
         time: timeLeft,
         question: q,
@@ -238,7 +238,7 @@ function startTimer() {
         timeLeft--;
         document.getElementById("timer").textContent = `⏱ ${timeLeft}`;
 
-        db.ref("quiz/time").set(timeLeft);
+        db.ref("vsion-cse-quiz/time").set(timeLeft);
 
         if (timeLeft <= 0) {
             clearInterval(timer);
@@ -251,7 +251,7 @@ function startTimer() {
  * EVALUATE ANSWERS
  ***********************/
 function evaluate() {
-    db.ref("quiz").once("value", snap => {
+    db.ref("vsion-cse-quiz").once("value", snap => {
         const data = snap.val();
         const correct = data.questions.correct;
 
@@ -268,14 +268,15 @@ function evaluate() {
         }
         
 
-        db.ref("quiz/teamA/score").set(scoreA);
-        db.ref("quiz/teamB/score").set(scoreB);
+        db.ref("vsion-cse-quiz/teamA/score").set(scoreA);
+        db.ref("vsion-cse-quiz/teamB/score").set(scoreB);
 
         document.getElementById("scoreA").textContent = scoreA;
         document.getElementById("scoreB").textContent = scoreB;
     });
 }
 window.startQuiz = startQuiz;
+
 
 
 
