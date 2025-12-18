@@ -2,7 +2,7 @@
  * FIREBASE SETUP
  ***********************/
 const firebaseConfig = {
-    apiKey: "AIzaSyAF_enzLhyTIymgOooZYBfz0w5FnKsL1nw",
+  apiKey: "AIzaSyAF_enzLhyTIymgOooZYBfz0w5FnKsL1nw",
   authDomain: "vison-cse-quiz.firebaseapp.com",
   databaseURL: "https://vison-cse-quiz-default-rtdb.firebaseio.com",
   projectId: "vison-cse-quiz",
@@ -21,7 +21,7 @@ const params = new URLSearchParams(window.location.search);
 const team = params.get("team"); // A or B
 
 if (!team || (team !== "A" && team !== "B")) {
-    alert("Invalid team link");
+  alert("Invalid team link");
 }
 
 document.getElementById("teamTitle").textContent = `TEAM ${team}`;
@@ -35,65 +35,73 @@ const timerEl = document.getElementById("timer");
 const betInput = document.getElementById("betInput");
 
 let selectedAnswer = null;
+let lastQuestionIndex = -1;
 
 /***********************
  * LISTEN TO QUIZ STATE
  ***********************/
-db.ref("vsion-cse-quiz").on("value", snap => {
-    const data = snap.val();
-    if (!data || !data.questions) return;
+db.ref("quiz").on("value", snap => {
+  const data = snap.val();
+  if (!data || !data.question) return;
 
-    // Question
-    questionEl.textContent = data.question.question;
+  console.log("📡 Team received:", data);
 
-    // Timer
-    timerEl.textContent = `⏱ ${data.time}`;
+  // Show question
+  questionEl.textContent = data.question.question;
 
-    // Render options
+  // Show timer
+  timerEl.textContent = `⏱ ${data.time ?? "--"}`;
+
+  // Render options ONLY when question changes
+  if (data.index !== lastQuestionIndex) {
+    lastQuestionIndex = data.index;
     renderOptions(data.question.options);
-
-    // Score sync is handled by host only
+  }
 });
 
 /***********************
  * RENDER OPTIONS
  ***********************/
 function renderOptions(options) {
-    optionsEl.innerHTML = "";
-    selectedAnswer = null;
+  optionsEl.innerHTML = "";
+  selectedAnswer = null;
 
-    options.forEach((opt, index) => {
-        const btn = document.createElement("button");
-        btn.textContent = opt;
+  options.forEach((opt, index) => {
+    const row = document.createElement("div");
+    row.className = "option-row";
 
-        btn.onclick = () => {
-            selectOption(index, btn);
-        };
+    const btn = document.createElement("button");
+    btn.textContent = opt;
 
-        optionsEl.appendChild(btn);
-    });
+    btn.onclick = () => {
+      selectOption(index, btn);
+    };
+
+    row.appendChild(btn);
+    optionsEl.appendChild(row);
+  });
 }
 
 /***********************
  * OPTION SELECT (BLUE)
  ***********************/
 function selectOption(index, btn) {
-    selectedAnswer = index;
+  selectedAnswer = index;
 
-    // UI
-    [...optionsEl.children].forEach(b => b.classList.remove("selected"));
-    btn.classList.add("selected");
+  // UI highlight
+  [...optionsEl.querySelectorAll("button")].forEach(b =>
+    b.classList.remove("selected")
+  );
+  btn.classList.add("selected");
 
-    // Send answer to Firebase
-    db.ref(`vsion-cse-quiz/team${team}/answer`).set(index);
+  // Send answer to Firebase
+  db.ref(`quiz/team${team}/answer`).set(index);
 }
 
 /***********************
  * BET INPUT
  ***********************/
 betInput.addEventListener("change", () => {
-    const bet = parseInt(betInput.value) || 0;
-    db.ref(`vsion-cse-quiz/team${team}/bet`).set(bet);
+  const bet = parseInt(betInput.value) || 0;
+  db.ref(`quiz/team${team}/bet`).set(bet);
 });
-
-
