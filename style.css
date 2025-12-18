@@ -141,33 +141,44 @@ input:focus {
 }
 
 /* ===== OPTIONS ===== */
+/* OPTIONS CONTAINER */
 .options {
-    margin-top: 18px;
+  display: flex;
+  flex-direction: column;   /* STACK OPTIONS */
+  gap: 12px;
+  margin-top: 15px;
 }
 
-.option-row {
-    display: flex;
-    margin-bottom: 12px;
+/* OPTION BUTTON */
+.options button {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-family: 'Orbitron', sans-serif;
+
+  color: #00f7ff;
+  background: rgba(0, 20, 30, 0.9);
+
+  border: 1px solid #00f7ff;
+  border-radius: 8px;
+
+  cursor: pointer;
+  transition: all 0.25s ease;
 }
 
-.option-row button {
-    width: 100%;
-    padding: 12px;
-
-    background: #0b1220;
-    color: #e5f9ff;
-
-    border: 1px solid rgba(0, 255, 255, 0.35);
-    border-radius: 10px;
-
-    cursor: pointer;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 14px;
+/* HOVER */
+.options button:hover {
+  background: rgba(0, 247, 255, 0.15);
+  transform: scale(1.02);
 }
 
-.option-row button:hover {
-    background: #0f172a;
+/* SELECTED (BLUE) */
+.options button.selected {
+  background: rgba(0, 120, 255, 0.35);
+  border-color: #3399ff;
+  color: #ffffff;
 }
+
 
 /* ===== OPTION STATES ===== */
 .selected {
@@ -218,3 +229,4 @@ button:disabled {
 .restart-btn:hover {
     background: #2563eb;
 }
+
