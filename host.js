@@ -266,3 +266,5 @@ function evaluate() {
         document.getElementById("scoreB").textContent = scoreB;
     });
 }
+window.startQuiz = startQuiz;
+
