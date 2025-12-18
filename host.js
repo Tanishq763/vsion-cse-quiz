@@ -208,14 +208,21 @@ function startQuiz() {
  * DISPLAY (HOST)
  ***********************/
 function showQuestion(q) {
-    document.getElementById("questionText").textContent = q.question;
+    document.getElementById("questionText").textContent = q.text;
+
     const optionsDiv = document.getElementById("options");
     optionsDiv.innerHTML = "";
 
     q.options.forEach((opt, i) => {
+        const row = document.createElement("div");
+        row.className = "option-row";
+
         const btn = document.createElement("button");
         btn.textContent = opt;
-        optionsDiv.appendChild(btn);
+        btn.disabled = true; // host should not answer
+
+        row.appendChild(btn);
+        optionsDiv.appendChild(row);
     });
 }
 
@@ -267,6 +274,7 @@ function evaluate() {
     });
 }
 window.startQuiz = startQuiz;
+
 
 
 
