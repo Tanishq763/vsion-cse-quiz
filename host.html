@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Host – Vision CSE</title>
+  <meta charset="UTF-8">
+  <title>Host | Vision CSE Quiz</title>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -14,16 +15,30 @@
 
 <div class="container">
 
-  <h1>🎤 HOST CONTROL</h1>
+  <h1>🎤 HOST PANEL</h1>
 
+  <!-- Controls -->
   <div class="footer" style="justify-content:center; gap:15px;">
     <button id="startBtn" class="start-btn" onclick="startQuiz()">Start Quiz</button>
     <button id="nextBtn" class="start-btn hidden" onclick="nextQuestion()">Next Question</button>
   </div>
 
+  <!-- Timer -->
   <p style="text-align:center; margin-top:15px;">
     ⏱ Timer: <span id="timer">--</span>
   </p>
+
+  <!-- Scoreboard -->
+  <div class="scoreboard">
+    <div class="team">
+      <h3>TEAM A</h3>
+      <span id="scoreA">0</span>
+    </div>
+    <div class="team">
+      <h3>TEAM B</h3>
+      <span id="scoreB">0</span>
+    </div>
+  </div>
 
 </div>
 
