@@ -18,7 +18,7 @@ const db = firebase.database();
 /***********************
  * QUESTIONS
  ***********************/
-const allQuestions = [
+const questions = [
     {
         question: "Which of the following is a valid variable name in C?",
         options: ["2num", "num_2", "float", "num-2"],
@@ -246,7 +246,7 @@ function startTimer() {
 function evaluate() {
     db.ref("quiz").once("value", snap => {
         const data = snap.val();
-        const correct = data.question.correct;
+        const correct = data.questions.correct;
 
         let scoreA = data.teamA.score;
         let scoreB = data.teamB.score;
@@ -267,4 +267,5 @@ function evaluate() {
     });
 }
 window.startQuiz = startQuiz;
+
 
