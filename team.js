@@ -39,18 +39,18 @@ let selectedAnswer = null;
 /***********************
  * LISTEN TO QUIZ STATE
  ***********************/
-db.ref("quiz").on("value", snap => {
+db.ref("vsion-cse-quiz").on("value", snap => {
     const data = snap.val();
     if (!data || !data.questions) return;
 
     // Question
-    questionEl.textContent = data.questions.question;
+    questionEl.textContent = data.question.question;
 
     // Timer
     timerEl.textContent = `⏱ ${data.time}`;
 
     // Render options
-    renderOptions(data.questions.options);
+    renderOptions(data.question.options);
 
     // Score sync is handled by host only
 });
@@ -95,4 +95,5 @@ betInput.addEventListener("change", () => {
     const bet = parseInt(betInput.value) || 0;
     db.ref(`vsion-cse-quiz/team${team}/bet`).set(bet);
 });
+
 
