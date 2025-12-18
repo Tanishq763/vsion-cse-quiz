@@ -15,20 +15,20 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 /***********************
- * QUESTIONS (UNCHANGED)
+ * QUESTIONS
  ***********************/
 const questions = [
   {
-    question: "Which of the following is a valid variable name in C?",
-    options: ["2num", "num_2", "float", "num-2"],
+    question: "Which data structure follows FIFO order?",
+    options: ["Stack", "Queue", "Array", "Tree"],
     correct: 1
   },
   {
-    question: "Which symbol is used to terminate a statement in C/C++?",
-    options: [":", ".", ";", ","],
+    question: "Which keyword is used to define a function in Python?",
+    options: ["function", "define", "def", "fun"],
     correct: 2
   }
-  // (rest of your questions stay SAME)
+  // your full list stays same
 ];
 
 /***********************
@@ -37,13 +37,24 @@ const questions = [
 let index = -1;
 let timer = null;
 let timeLeft = 10;
+let timerStarted = false;
 
 /***********************
- * START / NEXT
+ * START QUIZ
  ***********************/
 function startQuiz() {
-  console.log("🔥 Start Quiz clicked");
+  index = 0;
 
+  document.getElementById("startBtn").classList.add("hidden");
+  document.getElementById("nextBtn").classList.remove("hidden");
+
+  loadQuestion();
+}
+
+/***********************
+ * NEXT QUESTION
+ ***********************/
+function nextQuestion() {
   index++;
 
   if (index >= questions.length) {
@@ -51,64 +62,62 @@ function startQuiz() {
     return;
   }
 
+  loadQuestion();
+}
+
+/***********************
+ * LOAD QUESTION (NO TIMER HERE)
+ ***********************/
+function loadQuestion() {
+  clearInterval(timer);
+  timerStarted = false;
+  timeLeft = 10;
+
   const q = questions[index];
 
-  // 🔥 WRITE EVERYTHING UNDER ONE NODE: quiz
-  db.ref("quiz").update({
-    index: index,
-    time: timeLeft,
+  db.ref("quiz").set({
+    index,
+    time: "--",
     question: {
       question: q.question,
       options: q.options,
       correct: q.correct
-    }
+    },
+    teamA: { answer: null, bet: null, score: 0 },
+    teamB: { answer: null, bet: null, score: 0 }
   });
 
-  // Initialize teams ONLY once
-  if (index === 0) {
-    db.ref("quiz/teamA").set({ answer: null, bet: 0, score: 0 });
-    db.ref("quiz/teamB").set({ answer: null, bet: 0, score: 0 });
-  }
-
-  showQuestion(q);
-  startTimer();
+  document.getElementById("timer").textContent = "--";
 }
 
 /***********************
- * DISPLAY (HOST)
+ * LISTEN FOR BETS → START TIMER
  ***********************/
-function showQuestion(q) {
-  document.getElementById("questionText").textContent = q.question;
+db.ref("quiz").on("value", snap => {
+  const data = snap.val();
+  if (!data || timerStarted) return;
 
-  const optionsDiv = document.getElementById("options");
-  optionsDiv.innerHTML = "";
+  const betA = data.teamA?.bet;
+  const betB = data.teamB?.bet;
 
-  q.options.forEach(opt => {
-    const row = document.createElement("div");
-    row.className = "option-row";
-
-    const btn = document.createElement("button");
-    btn.textContent = opt;
-    btn.disabled = true;
-
-    row.appendChild(btn);
-    optionsDiv.appendChild(row);
-  });
-}
+  if (typeof betA === "number" && typeof betB === "number") {
+    startTimer();
+  }
+});
 
 /***********************
- * TIMER (SYNCED)
+ * TIMER
  ***********************/
 function startTimer() {
-  clearInterval(timer);
+  timerStarted = true;
   timeLeft = 10;
 
-  document.getElementById("timer").textContent = `⏱ ${timeLeft}`;
+  document.getElementById("timer").textContent = timeLeft;
+  db.ref("quiz/time").set(timeLeft);
 
   timer = setInterval(() => {
     timeLeft--;
-
-    document.getElementById("timer").textContent = `⏱ ${timeLeft}`;
+    document.getElementById("timer").textContent = timeLeft;
     db.ref("quiz/time").set(timeLeft);
 
     if (timeLeft <= 0) {
@@ -124,30 +133,21 @@ function startTimer() {
 function evaluate() {
   db.ref("quiz").once("value", snap => {
     const data = snap.val();
-    if (!data) return;
-
     const correct = data.question.correct;
 
-    let scoreA = data.teamA?.score || 0;
-    let scoreB = data.teamB?.score || 0;
+    let a = data.teamA.score;
+    let b = data.teamB.score;
 
-    if (data.teamA?.answer !== null) {
-      scoreA += (data.teamA.answer === correct ? data.teamA.bet : -data.teamA.bet);
-    }
+    if (data.teamA.answer !== null)
+      a += data.teamA.answer === correct ? data.teamA.bet : -data.teamA.bet;
 
-    if (data.teamB?.answer !== null) {
-      scoreB += (data.teamB.answer === correct ? data.teamB.bet : -data.teamB.bet);
-    }
+    if (data.teamB.answer !== null)
+      b += data.teamB.answer === correct ? data.teamB.bet : -data.teamB.bet;
 
-    db.ref("quiz/teamA/score").set(scoreA);
-    db.ref("quiz/teamB/score").set(scoreB);
-
-    document.getElementById("scoreA").textContent = scoreA;
-    document.getElementById("scoreB").textContent = scoreB;
+    db.ref("quiz/teamA/score").set(a);
+    db.ref("quiz/teamB/score").set(b);
   });
 }
 
-/***********************
- * EXPOSE TO HTML
- ***********************/
 window.startQuiz = startQuiz;
+window.nextQuestion = nextQuestion;
