@@ -1,6 +1,3 @@
-/***********************
- * FIREBASE SETUP
- ***********************/
 const firebaseConfig = {
   apiKey: "AIzaSyAF_enzLhyTIymgOooZYBfz0w5FnKsL1nw",
   authDomain: "vison-cse-quiz.firebaseapp.com",
@@ -14,88 +11,70 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/***********************
- * TEAM DETECTION
- ***********************/
 const team = new URLSearchParams(window.location.search).get("team");
-document.getElementById("teamTitle").textContent = `TEAM ${team}`;
 
-/***********************
- * DOM
- ***********************/
-const questionEl = document.getElementById("question");
-const optionsEl = document.getElementById("options");
-const timerEl = document.getElementById("timer");
-const betInput = document.getElementById("betInput");
-const myScoreEl = document.getElementById("myScore");
+const qEl = document.getElementById("question");
+const optEl = document.getElementById("options");
+const tEl = document.getElementById("timer");
+const betEl = document.getElementById("betInput");
+const scoreEl = document.getElementById("myScore");
 const resultBox = document.getElementById("resultBox");
 const resultText = document.getElementById("resultText");
 
 let lastIndex = -1;
 
-/***********************
- * LISTEN TO QUIZ
- ***********************/
 db.ref("quiz").on("value", snap => {
-  const data = snap.val();
-  if (!data) return;
+  const d = snap.val();
+  if (!d) return;
 
-  if (!data.started) {
-    questionEl.textContent = "Waiting for host to start quiz…";
-    optionsEl.innerHTML = "";
-    timerEl.textContent = "⏱ --";
-    betInput.disabled = true;
+  scoreEl.textContent = d[`team${team}`].score;
+
+  if (d.state === "IDLE") {
+    qEl.textContent = "Waiting for host…";
+    optEl.innerHTML = "";
+    betEl.disabled = true;
+    tEl.textContent = "--";
+    resultBox.classList.add("hidden");
     return;
   }
 
-  myScoreEl.textContent = data[`team${team}`]?.score ?? 0;
-
-  if (data.finished) {
-    questionEl.textContent = "Quiz Finished";
-    optionsEl.innerHTML = "";
-    betInput.disabled = true;
-    timerEl.textContent = "⏱ --";
+  if (d.state === "FINISHED") {
+    qEl.textContent = "Quiz Finished";
+    optEl.innerHTML = "";
+    betEl.disabled = true;
+    tEl.textContent = "--";
     resultBox.classList.remove("hidden");
-    resultText.textContent = data.winnerText;
+    resultText.textContent = d.winnerText;
     return;
   }
 
-  questionEl.textContent = data.question.question;
-  timerEl.textContent = `⏱ ${data.time ?? "--"}`;
+  qEl.textContent = d.question.question;
+  tEl.textContent = d.time;
 
-  if (data.index !== lastIndex) {
-    lastIndex = data.index;
-    renderOptions(data.question.options);
-    betInput.disabled = !data.betsOpen;
-    betInput.value = "";
+  if (d.index !== lastIndex) {
+    lastIndex = d.index;
+    renderOptions(d.question.options);
+    betEl.value = "";
   }
 
-  betInput.disabled = !data.betsOpen;
+  betEl.disabled = d.state !== "BETTING";
 });
 
-/***********************
- * OPTIONS
- ***********************/
-function renderOptions(options) {
-  optionsEl.innerHTML = "";
-  options.forEach((opt, i) => {
-    const btn = document.createElement("button");
-    btn.textContent = opt;
-    btn.onclick = () => {
-      [...optionsEl.children].forEach(b => b.classList.remove("selected"));
-      btn.classList.add("selected");
+function renderOptions(opts) {
+  optEl.innerHTML = "";
+  opts.forEach((o, i) => {
+    const b = document.createElement("button");
+    b.textContent = o;
+    b.onclick = () => {
+      [...optEl.children].forEach(x => x.classList.remove("selected"));
+      b.classList.add("selected");
       db.ref(`quiz/team${team}/answer`).set(i);
     };
-    optionsEl.appendChild(btn);
+    optEl.appendChild(b);
   });
 }
 
-/***********************
- * BET
- ***********************/
-betInput.addEventListener("change", () => {
-  const bet = parseInt(betInput.value);
-  if (!isNaN(bet)) {
-    db.ref(`quiz/team${team}/bet`).set(bet);
-  }
+betEl.addEventListener("change", () => {
+  const v = parseInt(betEl.value);
+  if (!isNaN(v)) db.ref(`quiz/team${team}/bet`).set(v);
 });
