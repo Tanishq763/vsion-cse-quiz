@@ -89,14 +89,44 @@ function nextQuestion() {
  * RESTART QUIZ
  ***********************/
 function restartQuiz() {
-  hardReset();
+  clearInterval(timer);
+  index = -1;
+  roundId = 0;
+  timeLeft = 10;
 
+  // 🔥 FULL HARD RESET — NO LEFTOVER DATA
+  db.ref("quiz").set({
+    state: "IDLE",
+    index: -1,
+    roundId: 0,
+    time: "--",
+    question: null,
+    winnerText: "",
+
+    teamA: {
+      score: 0,
+      bet: null,
+      betRound: -1,
+      answer: null
+    },
+
+    teamB: {
+      score: 0,
+      bet: null,
+      betRound: -1,
+      answer: null
+    }
+  });
+
+  // 🔄 HOST UI RESET
   document.getElementById("startBtn").classList.remove("hidden");
   document.getElementById("nextBtn").classList.add("hidden");
   document.getElementById("restartBtn").classList.add("hidden");
-  document.getElementById("winnerScreen").classList.add("hidden");
+
   document.getElementById("timer").textContent = "--";
+  document.getElementById("winnerScreen").classList.add("hidden");
 }
+
 
 /***********************
  * LOAD QUESTION (NEW ROUND)
@@ -222,3 +252,4 @@ function finishQuiz() {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz;
+
