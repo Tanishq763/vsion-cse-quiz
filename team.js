@@ -41,16 +41,16 @@ let selectedAnswer = null;
  ***********************/
 db.ref("quiz").on("value", snap => {
     const data = snap.val();
-    if (!data || !data.question) return;
+    if (!data || !data.questions) return;
 
     // Question
-    questionEl.textContent = data.question.text;
+    questionEl.textContent = data.questions.question;
 
     // Timer
     timerEl.textContent = `⏱ ${data.time}`;
 
     // Render options
-    renderOptions(data.question.options);
+    renderOptions(data.questions.options);
 
     // Score sync is handled by host only
 });
@@ -85,7 +85,7 @@ function selectOption(index, btn) {
     btn.classList.add("selected");
 
     // Send answer to Firebase
-    db.ref(`quiz/team${team}/answer`).set(index);
+    db.ref(`vsion-cse-quiz/team${team}/answer`).set(index);
 }
 
 /***********************
@@ -93,5 +93,6 @@ function selectOption(index, btn) {
  ***********************/
 betInput.addEventListener("change", () => {
     const bet = parseInt(betInput.value) || 0;
-    db.ref(`quiz/team${team}/bet`).set(bet);
+    db.ref(`vsion-cse-quiz/team${team}/bet`).set(bet);
 });
+
