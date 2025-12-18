@@ -41,12 +41,23 @@ let lastIndex = -1;
  ***********************/
 db.ref("quiz").on("value", snap => {
   const data = snap.val();
-  if (!data || !data.question) return;
+  if (!data) return;
+
+  // quiz not started
+  if (!data.started) {
+    questionEl.textContent = "Waiting for host to start quiz…";
+    optionsEl.innerHTML = "";
+    timerEl.textContent = "⏱ --";
+    betInput.disabled = true;
+    return;
+  }
+
+  myScoreEl.textContent = data[`team${team}`]?.score ?? 0;
+
+  if (!data.question) return;
 
   questionEl.textContent = data.question.question;
   timerEl.textContent = `⏱ ${data.time ?? "--"}`;
-
-  myScoreEl.textContent = data[`team${team}`]?.score ?? 0;
 
   if (data.index !== lastIndex) {
     lastIndex = data.index;
