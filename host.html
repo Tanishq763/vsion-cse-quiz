@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vision CSE Quiz – HOST</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🎤 VISION CSE – HOST</h1>
+
+    <h2 id="questionText">Press START</h2>
+
+    <div class="options" id="options"></div>
+
+    <div class="footer">
+        <span id="timer">⏱ 0</span>
+        <button class="start-btn" onclick="startQuiz()">Start / Next</button>
+    </div>
+
+    <hr style="margin:15px 0">
+
+    <p>Team A Score: <b id="scoreA">0</b></p>
+    <p>Team B Score: <b id="scoreB">0</b></p>
+
+</div>
+
+<script src="host.js"></script>
+</body>
+</html>
