@@ -153,6 +153,11 @@ function startTimer() {
 
     if (timeLeft <= 0) {
       clearInterval(timer);
+
+      // 🔒 lock round immediately
+      db.ref("quiz/state").set("LOCKED");
+
+      // ✅ evaluate instantly
       evaluate();
     }
   }, 1000);
@@ -164,21 +169,27 @@ function startTimer() {
 function evaluate() {
   db.ref("quiz").once("value", snap => {
     const d = snap.val();
-    const c = d.question.correct;
+    if (!d || !d.question) return;
+
+    const correct = d.question.correct;
 
     let a = d.teamA.score;
     let b = d.teamB.score;
 
-    if (d.teamA.answer !== null)
-      a += d.teamA.answer === c ? d.teamA.bet : -d.teamA.bet;
+    if (d.teamA.answer !== null) {
+      a += d.teamA.answer === correct ? d.teamA.bet : -d.teamA.bet;
+    }
 
-    if (d.teamB.answer !== null)
-      b += d.teamB.answer === c ? d.teamB.bet : -d.teamB.bet;
+    if (d.teamB.answer !== null) {
+      b += d.teamB.answer === correct ? d.teamB.bet : -d.teamB.bet;
+    }
 
+    // 🔥 SCORE UPDATE HAPPENS IMMEDIATELY
     db.ref("quiz/teamA/score").set(a);
     db.ref("quiz/teamB/score").set(b);
   });
 }
+
 
 /***********************
  * FINISH
@@ -203,3 +214,4 @@ function finishQuiz() {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz;
+
