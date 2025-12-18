@@ -36,26 +36,27 @@ const questions = [
 let index = -1;
 let timer = null;
 let timeLeft = 10;
+let roundId = 0;
 
 /***********************
- * RESET EVERYTHING (SAFE)
+ * HARD RESET
  ***********************/
 function hardReset() {
   clearInterval(timer);
+  roundId = 0;
+
   db.ref("quiz").set({
     state: "IDLE",
+    roundId: 0,
     index: -1,
     time: "--",
     question: null,
-    teamA: { score: 0, bet: null, answer: null },
-    teamB: { score: 0, bet: null, answer: null },
+    teamA: { score: 0, bet: null, betRound: -1, answer: null },
+    teamB: { score: 0, bet: null, betRound: -1, answer: null },
     winnerText: ""
   });
 }
 
-/***********************
- * INIT
- ***********************/
 hardReset();
 
 /***********************
@@ -84,7 +85,7 @@ function nextQuestion() {
 }
 
 /***********************
- * RESTART QUIZ
+ * RESTART
  ***********************/
 function restartQuiz() {
   hardReset();
@@ -97,31 +98,31 @@ function restartQuiz() {
 }
 
 /***********************
- * LOAD QUESTION
+ * LOAD QUESTION (NEW ROUND)
  ***********************/
 function loadQuestion() {
   clearInterval(timer);
   timeLeft = 10;
+  roundId++;
 
   const q = questions[index];
 
   db.ref("quiz").update({
     state: "BETTING",
+    roundId,
     index,
     time: "--",
     question: q
   });
 
-  db.ref("quiz/teamA/bet").set(null);
-  db.ref("quiz/teamA/answer").set(null);
-  db.ref("quiz/teamB/bet").set(null);
-  db.ref("quiz/teamB/answer").set(null);
+  db.ref("quiz/teamA").update({ bet: null, betRound: -1, answer: null });
+  db.ref("quiz/teamB").update({ bet: null, betRound: -1, answer: null });
 
   document.getElementById("timer").textContent = "--";
 }
 
 /***********************
- * LISTEN FOR BETS
+ * WAIT FOR BETS (STRICT)
  ***********************/
 db.ref("quiz").on("value", snap => {
   const d = snap.val();
@@ -131,8 +132,8 @@ db.ref("quiz").on("value", snap => {
   document.getElementById("scoreB").textContent = d.teamB.score;
 
   if (
-    typeof d.teamA.bet === "number" &&
-    typeof d.teamB.bet === "number"
+    d.teamA.betRound === d.roundId &&
+    d.teamB.betRound === d.roundId
   ) {
     startTimer();
   }
@@ -180,7 +181,7 @@ function evaluate() {
 }
 
 /***********************
- * FINISH QUIZ
+ * FINISH
  ***********************/
 function finishQuiz() {
   db.ref("quiz").once("value", snap => {
