@@ -253,7 +253,7 @@ function startTimer() {
 function evaluate() {
     db.ref("vsion-cse-quiz").once("value", snap => {
         const data = snap.val();
-        const correct = data.questions.correct;
+        const correct = data.question.correct;
 
         let scoreA = data.teamA.score;
         let scoreB = data.teamB.score;
@@ -276,6 +276,7 @@ function evaluate() {
     });
 }
 window.startQuiz = startQuiz;
+
 
 
 
