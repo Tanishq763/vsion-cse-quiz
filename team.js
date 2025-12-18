@@ -1,3 +1,6 @@
+/***********************
+ * FIREBASE SETUP
+ ***********************/
 const firebaseConfig = {
   apiKey: "AIzaSyAF_enzLhyTIymgOooZYBfz0w5FnKsL1nw",
   authDomain: "vison-cse-quiz.firebaseapp.com",
@@ -8,73 +11,122 @@ const firebaseConfig = {
   appId: "1:961037861554:web:e155fc16fdd74ca503bfab"
 };
 
-firebase.initializeApp(firebaseConfig);
+// 🔥 Prevent double initialization
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.database();
 
+/***********************
+ * TEAM DETECTION
+ ***********************/
 const team = new URLSearchParams(window.location.search).get("team");
 
-const qEl = document.getElementById("question");
-const optEl = document.getElementById("options");
-const tEl = document.getElementById("timer");
-const betEl = document.getElementById("betInput");
-const scoreEl = document.getElementById("myScore");
+if (!team || (team !== "A" && team !== "B")) {
+  alert("Invalid team link");
+}
+
+document.getElementById("teamTitle").textContent = `TEAM ${team}`;
+
+/***********************
+ * DOM ELEMENTS
+ ***********************/
+const questionEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const timerEl = document.getElementById("timer");
+const betInput = document.getElementById("betInput");
+const myScoreEl = document.getElementById("myScore");
 const resultBox = document.getElementById("resultBox");
 const resultText = document.getElementById("resultText");
 
-let lastIndex = -1;
+/***********************
+ * LOCAL STATE
+ ***********************/
+let lastRoundId = -1;
 
+/***********************
+ * LISTEN TO QUIZ STATE
+ ***********************/
 db.ref("quiz").on("value", snap => {
-  const d = snap.val();
-  if (!d) return;
+  const data = snap.val();
+  if (!data) return;
 
-  scoreEl.textContent = d[`team${team}`].score;
+  // Always update score
+  myScoreEl.textContent = data[`team${team}`]?.score ?? 0;
 
-  if (d.state === "IDLE") {
-    qEl.textContent = "Waiting for host…";
-    optEl.innerHTML = "";
-    betEl.disabled = true;
-    tEl.textContent = "--";
+  /* ---------- IDLE ---------- */
+  if (data.state === "IDLE") {
+    questionEl.textContent = "Waiting for host to start quiz…";
+    optionsEl.innerHTML = "";
+    timerEl.textContent = "⏱ --";
+    betInput.disabled = true;
     resultBox.classList.add("hidden");
     return;
   }
 
-  if (d.state === "FINISHED") {
-    qEl.textContent = "Quiz Finished";
-    optEl.innerHTML = "";
-    betEl.disabled = true;
-    tEl.textContent = "--";
+  /* ---------- FINISHED ---------- */
+  if (data.state === "FINISHED") {
+    questionEl.textContent = "Quiz Finished";
+    optionsEl.innerHTML = "";
+    timerEl.textContent = "⏱ --";
+    betInput.disabled = true;
+
     resultBox.classList.remove("hidden");
-    resultText.textContent = d.winnerText;
+    resultText.textContent = data.winnerText ?? "";
+
     return;
   }
 
-  qEl.textContent = d.question.question;
-  tEl.textContent = d.time;
+  /* ---------- BETTING / RUNNING ---------- */
+  if (!data.question) return;
 
-  if (d.index !== lastIndex) {
-    lastIndex = d.index;
-    renderOptions(d.question.options);
-    betEl.value = "";
+  questionEl.textContent = data.question.question;
+  timerEl.textContent = `⏱ ${data.time ?? "--"}`;
+
+  // New round detected
+  if (data.roundId !== lastRoundId) {
+    lastRoundId = data.roundId;
+    renderOptions(data.question.options);
+    betInput.value = "";
   }
 
-  betEl.disabled = d.state !== "BETTING";
+  // Bet input enabled ONLY during BETTING
+  betInput.disabled = data.state !== "BETTING";
 });
 
-function renderOptions(opts) {
-  optEl.innerHTML = "";
-  opts.forEach((o, i) => {
-    const b = document.createElement("button");
-    b.textContent = o;
-    b.onclick = () => {
-      [...optEl.children].forEach(x => x.classList.remove("selected"));
-      b.classList.add("selected");
-      db.ref(`quiz/team${team}/answer`).set(i);
+/***********************
+ * RENDER OPTIONS
+ ***********************/
+function renderOptions(options) {
+  optionsEl.innerHTML = "";
+
+  options.forEach((opt, index) => {
+    const btn = document.createElement("button");
+    btn.textContent = opt;
+
+    btn.onclick = () => {
+      [...optionsEl.children].forEach(b =>
+        b.classList.remove("selected")
+      );
+      btn.classList.add("selected");
+
+      db.ref(`quiz/team${team}/answer`).set(index);
     };
-    optEl.appendChild(b);
+
+    optionsEl.appendChild(btn);
   });
 }
 
-betEl.addEventListener("change", () => {
-  const v = parseInt(betEl.value);
-  if (!isNaN(v)) db.ref(`quiz/team${team}/bet`).set(v);
+/***********************
+ * BET INPUT
+ ***********************/
+betInput.addEventListener("change", () => {
+  const bet = parseInt(betInput.value);
+  if (isNaN(bet)) return;
+
+  // 🔥 Attach bet to CURRENT round only
+  db.ref(`quiz/team${team}`).update({
+    bet,
+    betRound: lastRoundId
+  });
 });
