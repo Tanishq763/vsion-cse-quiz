@@ -18,11 +18,6 @@ const db = firebase.database();
  * TEAM DETECTION
  ***********************/
 const team = new URLSearchParams(window.location.search).get("team");
-
-if (!team || (team !== "A" && team !== "B")) {
-  alert("Invalid team link");
-}
-
 document.getElementById("teamTitle").textContent = `TEAM ${team}`;
 
 /***********************
@@ -33,6 +28,8 @@ const optionsEl = document.getElementById("options");
 const timerEl = document.getElementById("timer");
 const betInput = document.getElementById("betInput");
 const myScoreEl = document.getElementById("myScore");
+const resultBox = document.getElementById("resultBox");
+const resultText = document.getElementById("resultText");
 
 let lastIndex = -1;
 
@@ -43,7 +40,6 @@ db.ref("quiz").on("value", snap => {
   const data = snap.val();
   if (!data) return;
 
-  // quiz not started
   if (!data.started) {
     questionEl.textContent = "Waiting for host to start quiz…";
     optionsEl.innerHTML = "";
@@ -54,7 +50,15 @@ db.ref("quiz").on("value", snap => {
 
   myScoreEl.textContent = data[`team${team}`]?.score ?? 0;
 
-  if (!data.question) return;
+  if (data.finished) {
+    questionEl.textContent = "Quiz Finished";
+    optionsEl.innerHTML = "";
+    betInput.disabled = true;
+    timerEl.textContent = "⏱ --";
+    resultBox.classList.remove("hidden");
+    resultText.textContent = data.winnerText;
+    return;
+  }
 
   questionEl.textContent = data.question.question;
   timerEl.textContent = `⏱ ${data.time ?? "--"}`;
@@ -62,13 +66,11 @@ db.ref("quiz").on("value", snap => {
   if (data.index !== lastIndex) {
     lastIndex = data.index;
     renderOptions(data.question.options);
-    betInput.disabled = false;
+    betInput.disabled = !data.betsOpen;
     betInput.value = "";
   }
 
-  if (typeof data.time === "number") {
-    betInput.disabled = true;
-  }
+  betInput.disabled = !data.betsOpen;
 });
 
 /***********************
@@ -76,24 +78,15 @@ db.ref("quiz").on("value", snap => {
  ***********************/
 function renderOptions(options) {
   optionsEl.innerHTML = "";
-
-  options.forEach((opt, index) => {
-    const row = document.createElement("div");
-    row.className = "option-row";
-
+  options.forEach((opt, i) => {
     const btn = document.createElement("button");
     btn.textContent = opt;
-
     btn.onclick = () => {
-      [...optionsEl.querySelectorAll("button")].forEach(b =>
-        b.classList.remove("selected")
-      );
+      [...optionsEl.children].forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
-      db.ref(`quiz/team${team}/answer`).set(index);
+      db.ref(`quiz/team${team}/answer`).set(i);
     };
-
-    row.appendChild(btn);
-    optionsEl.appendChild(row);
+    optionsEl.appendChild(btn);
   });
 }
 
