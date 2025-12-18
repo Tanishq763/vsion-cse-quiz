@@ -1,36 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Vision CSE Quiz – Team</title>
+  <meta charset="UTF-8">
+  <title>Team | Vision CSE Quiz</title>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
 
-    <h1 id="teamTitle">TEAM</h1>
+  <h1 id="teamTitle">TEAM</h1>
+  <p>Your Score: <b id="myScore">0</b></p>
 
-    <h2 id="question">Waiting for host…</h2>
+  <h2 id="question">Waiting for host…</h2>
 
-    <!-- BET -->
-    <label>Your Bet</label>
-    <input type="number" id="betInput" min="0">
+  <label>Enter Bet</label>
+  <input type="number" id="betInput">
 
-    <!-- OPTIONS -->
-    <div class="options" id="options"></div>
+  <div id="options" class="options"></div>
 
-    <div class="footer">
-        <span id="timer">⏱ --</span>
-    </div>
+  <div class="footer">
+    <span id="timer">⏱ --</span>
+  </div>
 
 </div>
 
