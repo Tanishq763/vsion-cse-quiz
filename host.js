@@ -259,11 +259,13 @@ function evaluate() {
         let scoreB = data.teamB.score;
 
        
+           if (data.teamA.answer !== null) {
             scoreA += (data.teamA.answer === correct ? data.teamA.bet : -data.teamA.bet);
-        
+        }
 
-       
+        if (data.teamB.answer !== null) {
             scoreB += (data.teamB.answer === correct ? data.teamB.bet : -data.teamB.bet);
+        }
         
 
         db.ref("quiz/teamA/score").set(scoreA);
@@ -274,6 +276,7 @@ function evaluate() {
     });
 }
 window.startQuiz = startQuiz;
+
 
 
 
