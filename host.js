@@ -31,41 +31,44 @@ const questions = [
 ];
 
 /***********************
- * GLOBAL STATE
+ * GLOBALS
  ***********************/
 let index = -1;
 let timer = null;
 let timeLeft = 10;
-let timerStarted = false;
 
 /***********************
- * INITIAL STATE
+ * RESET EVERYTHING (SAFE)
  ***********************/
-db.ref("quiz").set({
-  started: false,
-  finished: false,
-  betsOpen: false,
-  teamA: { score: 0 },
-  teamB: { score: 0 }
-});
+function hardReset() {
+  clearInterval(timer);
+  db.ref("quiz").set({
+    state: "IDLE",
+    index: -1,
+    time: "--",
+    question: null,
+    teamA: { score: 0, bet: null, answer: null },
+    teamB: { score: 0, bet: null, answer: null },
+    winnerText: ""
+  });
+}
+
+/***********************
+ * INIT
+ ***********************/
+hardReset();
 
 /***********************
  * START QUIZ
  ***********************/
 function startQuiz() {
   index = 0;
-
-  db.ref("quiz").update({
-    started: true,
-    finished: false
-  });
+  loadQuestion();
 
   document.getElementById("startBtn").classList.add("hidden");
   document.getElementById("nextBtn").classList.remove("hidden");
   document.getElementById("restartBtn").classList.remove("hidden");
   document.getElementById("winnerScreen").classList.add("hidden");
-
-  loadQuestion();
 }
 
 /***********************
@@ -84,17 +87,7 @@ function nextQuestion() {
  * RESTART QUIZ
  ***********************/
 function restartQuiz() {
-  clearInterval(timer);
-  index = -1;
-  timerStarted = false;
-
-  db.ref("quiz").set({
-    started: false,
-    finished: false,
-    betsOpen: false,
-    teamA: { score: 0 },
-    teamB: { score: 0 }
-  });
+  hardReset();
 
   document.getElementById("startBtn").classList.remove("hidden");
   document.getElementById("nextBtn").classList.add("hidden");
@@ -108,46 +101,38 @@ function restartQuiz() {
  ***********************/
 function loadQuestion() {
   clearInterval(timer);
-  timerStarted = false;
   timeLeft = 10;
 
   const q = questions[index];
 
   db.ref("quiz").update({
+    state: "BETTING",
     index,
     time: "--",
-    betsOpen: true,
-    question: {
-      question: q.question,
-      options: q.options,
-      correct: q.correct
-    }
+    question: q
   });
 
-  db.ref("quiz/teamA/answer").set(null);
   db.ref("quiz/teamA/bet").set(null);
-  db.ref("quiz/teamB/answer").set(null);
+  db.ref("quiz/teamA/answer").set(null);
   db.ref("quiz/teamB/bet").set(null);
+  db.ref("quiz/teamB/answer").set(null);
 
   document.getElementById("timer").textContent = "--";
 }
 
 /***********************
- * WAIT FOR BOTH BETS
+ * LISTEN FOR BETS
  ***********************/
 db.ref("quiz").on("value", snap => {
-  const data = snap.val();
-  if (!data || !data.started || data.finished) return;
+  const d = snap.val();
+  if (!d || d.state !== "BETTING") return;
 
-  document.getElementById("scoreA").textContent = data.teamA?.score ?? 0;
-  document.getElementById("scoreB").textContent = data.teamB?.score ?? 0;
-
-  if (timerStarted) return;
+  document.getElementById("scoreA").textContent = d.teamA.score;
+  document.getElementById("scoreB").textContent = d.teamB.score;
 
   if (
-    data.betsOpen &&
-    typeof data.teamA?.bet === "number" &&
-    typeof data.teamB?.bet === "number"
+    typeof d.teamA.bet === "number" &&
+    typeof d.teamB.bet === "number"
   ) {
     startTimer();
   }
@@ -157,13 +142,8 @@ db.ref("quiz").on("value", snap => {
  * TIMER
  ***********************/
 function startTimer() {
-  timerStarted = true;
-  timeLeft = 10;
-
-  db.ref("quiz/betsOpen").set(false);
+  db.ref("quiz/state").set("RUNNING");
   db.ref("quiz/time").set(timeLeft);
-
-  document.getElementById("timer").textContent = timeLeft;
 
   timer = setInterval(() => {
     timeLeft--;
@@ -182,19 +162,17 @@ function startTimer() {
  ***********************/
 function evaluate() {
   db.ref("quiz").once("value", snap => {
-    const data = snap.val();
-    if (!data) return;
+    const d = snap.val();
+    const c = d.question.correct;
 
-    const correct = data.question.correct;
+    let a = d.teamA.score;
+    let b = d.teamB.score;
 
-    let a = data.teamA?.score ?? 0;
-    let b = data.teamB?.score ?? 0;
+    if (d.teamA.answer !== null)
+      a += d.teamA.answer === c ? d.teamA.bet : -d.teamA.bet;
 
-    if (data.teamA?.answer !== null)
-      a += data.teamA.answer === correct ? data.teamA.bet : -data.teamA.bet;
-
-    if (data.teamB?.answer !== null)
-      b += data.teamB.answer === correct ? data.teamB.bet : -data.teamB.bet;
+    if (d.teamB.answer !== null)
+      b += d.teamB.answer === c ? d.teamB.bet : -d.teamB.bet;
 
     db.ref("quiz/teamA/score").set(a);
     db.ref("quiz/teamB/score").set(b);
@@ -206,13 +184,13 @@ function evaluate() {
  ***********************/
 function finishQuiz() {
   db.ref("quiz").once("value", snap => {
-    const data = snap.val();
+    const d = snap.val();
     let text = "🏆 DRAW!";
-    if (data.teamA.score > data.teamB.score) text = "🏆 TEAM A WINS!";
-    if (data.teamB.score > data.teamA.score) text = "🏆 TEAM B WINS!";
+    if (d.teamA.score > d.teamB.score) text = "🏆 TEAM A WINS!";
+    if (d.teamB.score > d.teamA.score) text = "🏆 TEAM B WINS!";
 
     db.ref("quiz").update({
-      finished: true,
+      state: "FINISHED",
       winnerText: text
     });
 
