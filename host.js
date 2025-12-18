@@ -39,16 +39,16 @@ let timeLeft = 10;
 let roundId = 0;
 
 /***********************
- * HARD RESET
+ * HARD RESET (FULL CLEAN)
  ***********************/
 function hardReset() {
   clearInterval(timer);
   roundId = 0;
 
   db.ref("quiz").set({
-    state: "IDLE",
-    roundId: 0,
+    state: "IDLE",              // IDLE | BETTING | RUNNING | LOCKED | FINISHED
     index: -1,
+    roundId: 0,
     time: "--",
     question: null,
     teamA: { score: 0, bet: null, betRound: -1, answer: null },
@@ -57,6 +57,7 @@ function hardReset() {
   });
 }
 
+// initialize on load
 hardReset();
 
 /***********************
@@ -85,7 +86,7 @@ function nextQuestion() {
 }
 
 /***********************
- * RESTART
+ * RESTART QUIZ
  ***********************/
 function restartQuiz() {
   hardReset();
@@ -109,12 +110,13 @@ function loadQuestion() {
 
   db.ref("quiz").update({
     state: "BETTING",
-    roundId,
     index,
+    roundId,
     time: "--",
     question: q
   });
 
+  // reset bets & answers ONLY
   db.ref("quiz/teamA").update({ bet: null, betRound: -1, answer: null });
   db.ref("quiz/teamB").update({ bet: null, betRound: -1, answer: null });
 
@@ -122,14 +124,18 @@ function loadQuestion() {
 }
 
 /***********************
- * WAIT FOR BETS (STRICT)
+ * WAIT FOR BOTH BETS
  ***********************/
 db.ref("quiz").on("value", snap => {
   const d = snap.val();
-  if (!d || d.state !== "BETTING") return;
+  if (!d) return;
 
+  // 🔥 Always keep host scoreboard live
   document.getElementById("scoreA").textContent = d.teamA.score;
   document.getElementById("scoreB").textContent = d.teamB.score;
+
+  // Only start timer during BETTING
+  if (d.state !== "BETTING") return;
 
   if (
     d.teamA.betRound === d.roundId &&
@@ -145,6 +151,7 @@ db.ref("quiz").on("value", snap => {
 function startTimer() {
   db.ref("quiz/state").set("RUNNING");
   db.ref("quiz/time").set(timeLeft);
+  document.getElementById("timer").textContent = timeLeft;
 
   timer = setInterval(() => {
     timeLeft--;
@@ -154,17 +161,17 @@ function startTimer() {
     if (timeLeft <= 0) {
       clearInterval(timer);
 
-      // 🔒 lock round immediately
+      // 🔒 lock round
       db.ref("quiz/state").set("LOCKED");
 
-      // ✅ evaluate instantly
+      // ✅ update scores immediately
       evaluate();
     }
   }, 1000);
 }
 
 /***********************
- * EVALUATE
+ * EVALUATE (IMMEDIATE SCORE UPDATE)
  ***********************/
 function evaluate() {
   db.ref("quiz").once("value", snap => {
@@ -176,27 +183,25 @@ function evaluate() {
     let a = d.teamA.score;
     let b = d.teamB.score;
 
-    if (d.teamA.answer !== null) {
+    if (d.teamA.answer !== null)
       a += d.teamA.answer === correct ? d.teamA.bet : -d.teamA.bet;
-    }
 
-    if (d.teamB.answer !== null) {
+    if (d.teamB.answer !== null)
       b += d.teamB.answer === correct ? d.teamB.bet : -d.teamB.bet;
-    }
 
-    // 🔥 SCORE UPDATE HAPPENS IMMEDIATELY
+    // 🔥 SCORE UPDATED RIGHT NOW
     db.ref("quiz/teamA/score").set(a);
     db.ref("quiz/teamB/score").set(b);
   });
 }
 
-
 /***********************
- * FINISH
+ * FINISH QUIZ
  ***********************/
 function finishQuiz() {
   db.ref("quiz").once("value", snap => {
     const d = snap.val();
+
     let text = "🏆 DRAW!";
     if (d.teamA.score > d.teamB.score) text = "🏆 TEAM A WINS!";
     if (d.teamB.score > d.teamA.score) text = "🏆 TEAM B WINS!";
@@ -211,7 +216,9 @@ function finishQuiz() {
   });
 }
 
+/***********************
+ * EXPORTS
+ ***********************/
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz;
-
