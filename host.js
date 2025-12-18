@@ -28,10 +28,11 @@ const questions = [
     options: ["function", "define", "def", "fun"],
     correct: 2
   }
+  // you can keep adding
 ];
 
 /***********************
- * GLOBALS
+ * GLOBAL STATE
  ***********************/
 let index = -1;
 let timer = null;
@@ -39,12 +40,23 @@ let timeLeft = 10;
 let timerStarted = false;
 
 /***********************
+ * INITIAL LOCK
+ ***********************/
+db.ref("quiz").set({
+  started: false
+});
+
+/***********************
  * START QUIZ
  ***********************/
 function startQuiz() {
   index = 0;
+
+  db.ref("quiz/started").set(true);
+
   document.getElementById("startBtn").classList.add("hidden");
   document.getElementById("nextBtn").classList.remove("hidden");
+
   loadQuestion();
 }
 
@@ -55,6 +67,7 @@ function nextQuestion() {
   index++;
   if (index >= questions.length) {
     alert("Quiz Finished");
+    db.ref("quiz/started").set(false);
     return;
   }
   loadQuestion();
@@ -70,6 +83,7 @@ function loadQuestion() {
 
   const q = questions[index];
 
+  // push question ONLY
   db.ref("quiz").update({
     index,
     time: "--",
@@ -77,10 +91,14 @@ function loadQuestion() {
       question: q.question,
       options: q.options,
       correct: q.correct
-    },
-    teamA: { answer: null, bet: null },
-    teamB: { answer: null, bet: null }
+    }
   });
+
+  // reset bets & answers ONLY (NOT scores)
+  db.ref("quiz/teamA/answer").set(null);
+  db.ref("quiz/teamA/bet").set(null);
+  db.ref("quiz/teamB/answer").set(null);
+  db.ref("quiz/teamB/bet").set(null);
 
   document.getElementById("timer").textContent = "--";
 }
@@ -90,9 +108,9 @@ function loadQuestion() {
  ***********************/
 db.ref("quiz").on("value", snap => {
   const data = snap.val();
-  if (!data) return;
+  if (!data || !data.started) return;
 
-  // Update scores live
+  // update scoreboard
   document.getElementById("scoreA").textContent = data.teamA?.score ?? 0;
   document.getElementById("scoreB").textContent = data.teamB?.score ?? 0;
 
@@ -129,7 +147,7 @@ function startTimer() {
 }
 
 /***********************
- * EVALUATE
+ * EVALUATE ANSWERS
  ***********************/
 function evaluate() {
   db.ref("quiz").once("value", snap => {
