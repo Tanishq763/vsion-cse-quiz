@@ -27,7 +27,7 @@ if (!team || (team !== "A" && team !== "B")) {
 document.getElementById("teamTitle").textContent = `TEAM ${team}`;
 
 /***********************
- * DOM
+ * DOM ELEMENTS
  ***********************/
 const questionEl = document.getElementById("question");
 const optionsEl = document.getElementById("options");
@@ -44,8 +44,6 @@ db.ref("quiz").on("value", snap => {
   const data = snap.val();
   if (!data || !data.question) return;
 
-  console.log("📡 Team received:", data);
-
   // Show question
   questionEl.textContent = data.question.question;
 
@@ -56,6 +54,16 @@ db.ref("quiz").on("value", snap => {
   if (data.index !== lastQuestionIndex) {
     lastQuestionIndex = data.index;
     renderOptions(data.question.options);
+
+    // Reset bet input for new question
+    betInput.disabled = false;
+    betInput.value = "";
+    selectedAnswer = null;
+  }
+
+  // 🔒 Lock bet input once timer starts
+  if (typeof data.time === "number") {
+    betInput.disabled = true;
   }
 });
 
@@ -64,7 +72,6 @@ db.ref("quiz").on("value", snap => {
  ***********************/
 function renderOptions(options) {
   optionsEl.innerHTML = "";
-  selectedAnswer = null;
 
   options.forEach((opt, index) => {
     const row = document.createElement("div");
@@ -73,9 +80,7 @@ function renderOptions(options) {
     const btn = document.createElement("button");
     btn.textContent = opt;
 
-    btn.onclick = () => {
-      selectOption(index, btn);
-    };
+    btn.onclick = () => selectOption(index, btn);
 
     row.appendChild(btn);
     optionsEl.appendChild(row);
@@ -102,6 +107,9 @@ function selectOption(index, btn) {
  * BET INPUT
  ***********************/
 betInput.addEventListener("change", () => {
-  const bet = parseInt(betInput.value) || 0;
+  const bet = parseInt(betInput.value);
+
+  if (isNaN(bet) || bet < 0) return;
+
   db.ref(`quiz/team${team}/bet`).set(bet);
 });
