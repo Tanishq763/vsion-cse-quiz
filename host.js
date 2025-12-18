@@ -28,7 +28,6 @@ const questions = [
     options: ["function", "define", "def", "fun"],
     correct: 2
   }
-  // your full list stays same
 ];
 
 /***********************
@@ -44,10 +43,8 @@ let timerStarted = false;
  ***********************/
 function startQuiz() {
   index = 0;
-
   document.getElementById("startBtn").classList.add("hidden");
   document.getElementById("nextBtn").classList.remove("hidden");
-
   loadQuestion();
 }
 
@@ -56,17 +53,15 @@ function startQuiz() {
  ***********************/
 function nextQuestion() {
   index++;
-
   if (index >= questions.length) {
     alert("Quiz Finished");
     return;
   }
-
   loadQuestion();
 }
 
 /***********************
- * LOAD QUESTION (NO TIMER HERE)
+ * LOAD QUESTION
  ***********************/
 function loadQuestion() {
   clearInterval(timer);
@@ -75,7 +70,7 @@ function loadQuestion() {
 
   const q = questions[index];
 
-  db.ref("quiz").set({
+  db.ref("quiz").update({
     index,
     time: "--",
     question: {
@@ -83,24 +78,30 @@ function loadQuestion() {
       options: q.options,
       correct: q.correct
     },
-    teamA: { answer: null, bet: null, score: 0 },
-    teamB: { answer: null, bet: null, score: 0 }
+    teamA: { answer: null, bet: null },
+    teamB: { answer: null, bet: null }
   });
 
   document.getElementById("timer").textContent = "--";
 }
 
 /***********************
- * LISTEN FOR BETS → START TIMER
+ * WAIT FOR BOTH BETS
  ***********************/
 db.ref("quiz").on("value", snap => {
   const data = snap.val();
-  if (!data || timerStarted) return;
+  if (!data) return;
 
-  const betA = data.teamA?.bet;
-  const betB = data.teamB?.bet;
+  // Update scores live
+  document.getElementById("scoreA").textContent = data.teamA?.score ?? 0;
+  document.getElementById("scoreB").textContent = data.teamB?.score ?? 0;
 
-  if (typeof betA === "number" && typeof betB === "number") {
+  if (timerStarted) return;
+
+  if (
+    typeof data.teamA?.bet === "number" &&
+    typeof data.teamB?.bet === "number"
+  ) {
     startTimer();
   }
 });
@@ -112,13 +113,13 @@ function startTimer() {
   timerStarted = true;
   timeLeft = 10;
 
-  document.getElementById("timer").textContent = timeLeft;
   db.ref("quiz/time").set(timeLeft);
+  document.getElementById("timer").textContent = timeLeft;
 
   timer = setInterval(() => {
     timeLeft--;
-    document.getElementById("timer").textContent = timeLeft;
     db.ref("quiz/time").set(timeLeft);
+    document.getElementById("timer").textContent = timeLeft;
 
     if (timeLeft <= 0) {
       clearInterval(timer);
@@ -128,21 +129,25 @@ function startTimer() {
 }
 
 /***********************
- * EVALUATE ANSWERS
+ * EVALUATE
  ***********************/
 function evaluate() {
   db.ref("quiz").once("value", snap => {
     const data = snap.val();
+    if (!data) return;
+
     const correct = data.question.correct;
 
-    let a = data.teamA.score;
-    let b = data.teamB.score;
+    let a = data.teamA?.score ?? 0;
+    let b = data.teamB?.score ?? 0;
 
-    if (data.teamA.answer !== null)
+    if (data.teamA?.answer !== null) {
       a += data.teamA.answer === correct ? data.teamA.bet : -data.teamA.bet;
+    }
 
-    if (data.teamB.answer !== null)
+    if (data.teamB?.answer !== null) {
       b += data.teamB.answer === correct ? data.teamB.bet : -data.teamB.bet;
+    }
 
     db.ref("quiz/teamA/score").set(a);
     db.ref("quiz/teamB/score").set(b);
