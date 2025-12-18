@@ -208,7 +208,7 @@ function startQuiz() {
  * DISPLAY (HOST)
  ***********************/
 function showQuestion(q) {
-    document.getElementById("questionText").textContent = q.text;
+    document.getElementById("questionText").textContent = q.question;
     const optionsDiv = document.getElementById("options");
     optionsDiv.innerHTML = "";
 
@@ -267,5 +267,6 @@ function evaluate() {
     });
 }
 window.startQuiz = startQuiz;
+
 
 
