@@ -208,7 +208,7 @@ function startQuiz() {
  * DISPLAY (HOST)
  ***********************/
 function showQuestion(q) {
-    document.getElementById("questionText").textContent = q.text;
+    document.getElementById("questionText").textContent = q.question;
 
     const optionsDiv = document.getElementById("options");
     optionsDiv.innerHTML = "";
@@ -258,13 +258,13 @@ function evaluate() {
         let scoreA = data.teamA.score;
         let scoreB = data.teamB.score;
 
-        if (data.teamA.answer !== null) {
+       
             scoreA += (data.teamA.answer === correct ? data.teamA.bet : -data.teamA.bet);
-        }
+        
 
-        if (data.teamB.answer !== null) {
+       
             scoreB += (data.teamB.answer === correct ? data.teamB.bet : -data.teamB.bet);
-        }
+        
 
         db.ref("quiz/teamA/score").set(scoreA);
         db.ref("quiz/teamB/score").set(scoreB);
@@ -274,6 +274,7 @@ function evaluate() {
     });
 }
 window.startQuiz = startQuiz;
+
 
 
 
