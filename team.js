@@ -17,8 +17,7 @@ const db = firebase.database();
 /***********************
  * TEAM DETECTION
  ***********************/
-const params = new URLSearchParams(window.location.search);
-const team = params.get("team"); // A or B
+const team = new URLSearchParams(window.location.search).get("team");
 
 if (!team || (team !== "A" && team !== "B")) {
   alert("Invalid team link");
@@ -27,48 +26,42 @@ if (!team || (team !== "A" && team !== "B")) {
 document.getElementById("teamTitle").textContent = `TEAM ${team}`;
 
 /***********************
- * DOM ELEMENTS
+ * DOM
  ***********************/
 const questionEl = document.getElementById("question");
 const optionsEl = document.getElementById("options");
 const timerEl = document.getElementById("timer");
 const betInput = document.getElementById("betInput");
+const myScoreEl = document.getElementById("myScore");
 
-let selectedAnswer = null;
-let lastQuestionIndex = -1;
+let lastIndex = -1;
 
 /***********************
- * LISTEN TO QUIZ STATE
+ * LISTEN TO QUIZ
  ***********************/
 db.ref("quiz").on("value", snap => {
   const data = snap.val();
   if (!data || !data.question) return;
 
-  // Show question
   questionEl.textContent = data.question.question;
-
-  // Show timer
   timerEl.textContent = `⏱ ${data.time ?? "--"}`;
 
-  // Render options ONLY when question changes
-  if (data.index !== lastQuestionIndex) {
-    lastQuestionIndex = data.index;
-    renderOptions(data.question.options);
+  myScoreEl.textContent = data[`team${team}`]?.score ?? 0;
 
-    // Reset bet input for new question
+  if (data.index !== lastIndex) {
+    lastIndex = data.index;
+    renderOptions(data.question.options);
     betInput.disabled = false;
     betInput.value = "";
-    selectedAnswer = null;
   }
 
-  // 🔒 Lock bet input once timer starts
   if (typeof data.time === "number") {
     betInput.disabled = true;
   }
 });
 
 /***********************
- * RENDER OPTIONS
+ * OPTIONS
  ***********************/
 function renderOptions(options) {
   optionsEl.innerHTML = "";
@@ -80,7 +73,13 @@ function renderOptions(options) {
     const btn = document.createElement("button");
     btn.textContent = opt;
 
-    btn.onclick = () => selectOption(index, btn);
+    btn.onclick = () => {
+      [...optionsEl.querySelectorAll("button")].forEach(b =>
+        b.classList.remove("selected")
+      );
+      btn.classList.add("selected");
+      db.ref(`quiz/team${team}/answer`).set(index);
+    };
 
     row.appendChild(btn);
     optionsEl.appendChild(row);
@@ -88,28 +87,11 @@ function renderOptions(options) {
 }
 
 /***********************
- * OPTION SELECT (BLUE)
- ***********************/
-function selectOption(index, btn) {
-  selectedAnswer = index;
-
-  // UI highlight
-  [...optionsEl.querySelectorAll("button")].forEach(b =>
-    b.classList.remove("selected")
-  );
-  btn.classList.add("selected");
-
-  // Send answer to Firebase
-  db.ref(`quiz/team${team}/answer`).set(index);
-}
-
-/***********************
- * BET INPUT
+ * BET
  ***********************/
 betInput.addEventListener("change", () => {
   const bet = parseInt(betInput.value);
-
-  if (isNaN(bet) || bet < 0) return;
-
-  db.ref(`quiz/team${team}/bet`).set(bet);
+  if (!isNaN(bet)) {
+    db.ref(`quiz/team${team}/bet`).set(bet);
+  }
 });
