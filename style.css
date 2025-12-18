@@ -2,6 +2,7 @@
     box-sizing: border-box;
 }
 
+/* ===== GLOBAL ===== */
 body {
     margin: 0;
     font-family: 'Orbitron', sans-serif;
@@ -15,56 +16,57 @@ body {
     align-items: center;
 }
 
-/* MAIN CONTAINER */
+/* ===== MAIN CONTAINER ===== */
 .container {
-    width: 440px;
-    padding: 22px;
-    border-radius: 14px;
+    width: 460px;
+    padding: 24px;
+    border-radius: 16px;
 
     background: rgba(5, 10, 20, 0.85);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
 
-    border: 1px solid rgba(0, 255, 255, 0.15);
-    box-shadow: 0 0 30px rgba(0, 255, 255, 0.15);
+    border: 1px solid rgba(0, 255, 255, 0.18);
+    box-shadow: 0 0 35px rgba(0, 255, 255, 0.18);
 }
 
 .hidden {
     display: none;
 }
 
-/* HEADINGS */
+/* ===== HEADINGS ===== */
 h1, h2 {
     text-align: center;
     letter-spacing: 2px;
+    margin: 10px 0;
 }
 
 h1 {
     color: #00f0ff;
-    text-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+    text-shadow: 0 0 14px rgba(0, 240, 255, 0.7);
 }
 
 h2 {
     color: #ffd166;
-    text-shadow: 0 0 10px rgba(255, 209, 102, 0.5);
+    text-shadow: 0 0 10px rgba(255, 209, 102, 0.55);
 }
 
-/* LABELS */
+/* ===== LABELS ===== */
 label {
     display: block;
-    margin-top: 12px;
+    margin-top: 14px;
     font-size: 13px;
     color: #8be9fd;
 }
 
-/* INPUTS */
+/* ===== INPUTS ===== */
 input {
     width: 100%;
-    padding: 8px;
-    margin-top: 4px;
+    padding: 9px;
+    margin-top: 6px;
 
     background: #0b1220;
-    border: 1px solid rgba(0, 255, 255, 0.3);
-    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 255, 0.35);
+    border-radius: 8px;
 
     color: #e5f9ff;
     font-family: 'Orbitron', sans-serif;
@@ -73,119 +75,125 @@ input {
 input:focus {
     outline: none;
     border-color: #00f0ff;
-    box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+    box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
 }
 
-/* START BUTTON */
+/* ===== START BUTTON ===== */
 .start-btn {
     width: 100%;
-    margin-top: 20px;
-    padding: 12px;
+    margin-top: 22px;
+    padding: 14px;
 
     background: linear-gradient(135deg, #00f0ff, #00bcd4);
     color: #020617;
 
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
 
     font-size: 18px;
-    font-weight: 700;
+    font-weight: 800;
     cursor: pointer;
 
-    box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+    box-shadow: 0 0 22px rgba(0, 240, 255, 0.65);
 }
 
 .start-btn:hover {
-    transform: scale(1.03);
+    transform: scale(1.04);
 }
 
-/* SCOREBOARD */
+/* ===== SCOREBOARD ===== */
 .scoreboard {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 .team {
     width: 48%;
     text-align: center;
-    padding: 10px;
-    border-radius: 10px;
+    padding: 12px;
+    border-radius: 12px;
 
     background: rgba(15, 23, 42, 0.9);
-    border: 1px solid rgba(0, 240, 255, 0.25);
+    border: 1px solid rgba(0, 240, 255, 0.28);
 }
 
 .team h3 {
     color: #00f0ff;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 }
 
 .team span {
-    font-size: 26px;
+    font-size: 28px;
     color: #ffd166;
-    text-shadow: 0 0 10px rgba(255, 209, 102, 0.6);
+    text-shadow: 0 0 12px rgba(255, 209, 102, 0.7);
 }
 
-/* BET PANEL */
+/* ===== BET PANEL ===== */
 .bet-panel {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
 }
 
 .bet {
     width: 48%;
 }
 
-/* OPTIONS */
+/* ===== OPTIONS ===== */
 .options {
-    margin-top: 15px;
+    margin-top: 18px;
 }
 
 .option-row {
     display: flex;
-    gap: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .option-row button {
-    flex: 1;
-    padding: 10px;
+    width: 100%;
+    padding: 12px;
 
     background: #0b1220;
     color: #e5f9ff;
 
-    border: 1px solid rgba(0, 255, 255, 0.25);
-    border-radius: 8px;
+    border: 1px solid rgba(0, 255, 255, 0.35);
+    border-radius: 10px;
 
     cursor: pointer;
     font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
 }
 
 .option-row button:hover {
     background: #0f172a;
 }
 
-/* STATES */
+/* ===== OPTION STATES ===== */
 .selected {
     background: #2563eb !important;
-    box-shadow: 0 0 15px rgba(37, 99, 235, 0.8);
+    box-shadow: 0 0 18px rgba(37, 99, 235, 0.85);
 }
 
 .correct {
     background: #16a34a !important;
-    box-shadow: 0 0 15px rgba(22, 163, 74, 0.8);
+    box-shadow: 0 0 18px rgba(22, 163, 74, 0.85);
 }
 
 .wrong {
     background: #dc2626 !important;
-    box-shadow: 0 0 15px rgba(220, 38, 38, 0.8);
+    box-shadow: 0 0 18px rgba(220, 38, 38, 0.85);
 }
 
-/* FOOTER */
+/* ===== HOST DISABLED OPTIONS ===== */
+button:disabled {
+    opacity: 0.7;
+    cursor: default;
+}
+
+/* ===== FOOTER ===== */
 .footer {
-    margin-top: 15px;
+    margin-top: 18px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -193,22 +201,20 @@ input:focus {
 
 #timer {
     color: #00f0ff;
-    text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+    font-size: 16px;
+    text-shadow: 0 0 12px rgba(0, 240, 255, 0.65);
 }
 
-/* RESTART BUTTON */
+/* ===== RESTART BUTTON ===== */
 .restart-btn {
     background: #1e40af;
     color: #e5f9ff;
     border: none;
-    padding: 6px 14px;
-    border-radius: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
     cursor: pointer;
 }
 
 .restart-btn:hover {
     background: #2563eb;
-}
-.restart-btn:active {
-    transform: scale(0.97);
 }
