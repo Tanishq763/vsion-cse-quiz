@@ -323,7 +323,7 @@ const allquestions = [
 /***********************
  * GLOBALS
  ***********************/
-const questions = [];
+let questions = [];
 let index = -1;
 let timer = null;
 let timeLeft = 10;
@@ -545,5 +545,6 @@ function finishQuiz() {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz;
+
 
 
