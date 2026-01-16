@@ -2,13 +2,13 @@
  * FIREBASE SETUP
  ***********************/
 const firebaseConfig = {
-  apiKey: "AIzaSyAF_enzLhyTIymgOooZYBfz0w5FnKsL1nw",
-  authDomain: "vison-cse-quiz.firebaseapp.com",
-  databaseURL: "https://vison-cse-quiz-default-rtdb.firebaseio.com",
-  projectId: "vison-cse-quiz",
-  storageBucket: "vison-cse-quiz.firebasestorage.app",
-  messagingSenderId: "961037861554",
-  appId: "1:961037861554:web:e155fc16fdd74ca503bfab"
+  apiKey: "AIzaSyDREhmA6fyafxw8dJqh30B5pjfdEAjf3no",
+  authDomain: "vision-cse-quiz.firebaseapp.com",
+  databaseURL: "https://vision-cse-quiz-default-rtdb.firebaseio.com",
+  projectId: "vision-cse-quiz",
+  storageBucket: "vision-cse-quiz.firebasestorage.app",
+  messagingSenderId: "1012496127258",
+  appId: "1:1012496127258:web:345bf07712c4b90fbdc8a3"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -545,6 +545,7 @@ function finishQuiz() {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz;
+
 
 
 
