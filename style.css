@@ -10,6 +10,17 @@ body {
 
     background: #05070d;
     color: #e5f9ff;
+  
+  
+  min-height: 100vh;
+  background-image: url("Vision_bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+
+
 
     display: flex;
     justify-content: center;
@@ -229,4 +240,5 @@ button:disabled {
 .restart-btn:hover {
     background: #2563eb;
 }
+
 
