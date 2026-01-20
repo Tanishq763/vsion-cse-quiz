@@ -1,168 +1,193 @@
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 /* ===== GLOBAL ===== */
 body {
-    margin: 0;
-    font-family: 'Orbitron', sans-serif;
-    height: 100vh;
-
-    background: #05070d;
-    color: #e5f9ff;
-  
-  
+  margin: 0;
+  font-family: 'Orbitron', sans-serif;
   min-height: 100vh;
+
   background-image: url("Vision_bg.jpeg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
 
-
-
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  color: #e5f9ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* ===== MAIN CONTAINER ===== */
 .container {
-    width: 460px;
-    padding: 24px;
-    border-radius: 16px;
+  width: 460px;
+  padding: 26px;
+  border-radius: 18px;
 
-    background: rgba(5, 10, 20, 0.85);
-    backdrop-filter: blur(12px);
+  background: rgba(5, 10, 20, 0.82);
+  backdrop-filter: blur(14px);
 
-    border: 1px solid rgba(0, 255, 255, 0.18);
-    box-shadow: 0 0 35px rgba(0, 255, 255, 0.18);
+  border: 1px solid rgba(0, 255, 255, 0.22);
+  box-shadow:
+    0 0 30px rgba(0, 255, 255, 0.35),
+    inset 0 0 18px rgba(0, 255, 255, 0.1);
+
+  animation: containerIn 0.8s ease;
+}
+
+@keyframes containerIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 .hidden {
-    display: none;
+  display: none;
 }
 
 /* ===== HEADINGS ===== */
 h1, h2 {
-    text-align: center;
-    letter-spacing: 2px;
-    margin: 10px 0;
+  text-align: center;
+  letter-spacing: 2px;
+  margin: 12px 0;
 }
 
 h1 {
-    color: #00f0ff;
-    text-shadow: 0 0 14px rgba(0, 240, 255, 0.7);
+  color: #00f0ff;
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.9);
 }
 
 h2 {
-    color: #ffd166;
-    text-shadow: 0 0 10px rgba(255, 209, 102, 0.55);
+  color: #ffd166;
+  text-shadow: 0 0 14px rgba(255, 209, 102, 0.7);
 }
 
 /* ===== LABELS ===== */
 label {
-    display: block;
-    margin-top: 14px;
-    font-size: 13px;
-    color: #8be9fd;
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #8be9fd;
 }
 
 /* ===== INPUTS ===== */
 input {
-    width: 100%;
-    padding: 9px;
-    margin-top: 6px;
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
 
-    background: #0b1220;
-    border: 1px solid rgba(0, 255, 255, 0.35);
-    border-radius: 8px;
+  background: #0b1220;
+  border: 1px solid rgba(0, 255, 255, 0.35);
+  border-radius: 10px;
 
-    color: #e5f9ff;
-    font-family: 'Orbitron', sans-serif;
+  color: #e5f9ff;
+  font-family: 'Orbitron', sans-serif;
+  transition: all 0.25s ease;
 }
 
 input:focus {
-    outline: none;
-    border-color: #00f0ff;
-    box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+  outline: none;
+  border-color: #00f0ff;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.6);
 }
 
-/* ===== START BUTTON ===== */
+/* ===== BUTTONS ===== */
 .start-btn {
-    width: 100%;
-    margin-top: 22px;
-    padding: 14px;
+  width: 100%;
+  margin-top: 18px;
+  padding: 14px;
 
-    background: linear-gradient(135deg, #00f0ff, #00bcd4);
-    color: #020617;
+  background: linear-gradient(135deg, #00f0ff, #00bcd4);
+  color: #020617;
 
-    border: none;
-    border-radius: 12px;
+  border: none;
+  border-radius: 14px;
 
-    font-size: 18px;
-    font-weight: 800;
-    cursor: pointer;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
 
-    box-shadow: 0 0 22px rgba(0, 240, 255, 0.65);
+  box-shadow: 0 0 26px rgba(0, 240, 255, 0.75);
+  transition: all 0.25s ease;
 }
 
 .start-btn:hover {
-    transform: scale(1.04);
+  transform: scale(1.06);
+}
+
+.start-btn:active {
+  transform: scale(0.96);
+}
+
+/* ===== DISABLED BUTTON ===== */
+.disabled-btn {
+  opacity: 0.35;
+  pointer-events: none;
+  box-shadow: none !important;
 }
 
 /* ===== SCOREBOARD ===== */
 .scoreboard {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 18px;
 }
 
 .team {
-    width: 48%;
-    text-align: center;
-    padding: 12px;
-    border-radius: 12px;
+  width: 48%;
+  text-align: center;
+  padding: 14px;
+  border-radius: 14px;
 
-    background: rgba(15, 23, 42, 0.9);
-    border: 1px solid rgba(0, 240, 255, 0.28);
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+
+  box-shadow: inset 0 0 20px rgba(0, 240, 255, 0.12);
 }
 
 .team h3 {
-    color: #00f0ff;
-    margin-bottom: 6px;
+  color: #00f0ff;
+  margin-bottom: 6px;
 }
 
 .team span {
-    font-size: 28px;
-    color: #ffd166;
-    text-shadow: 0 0 12px rgba(255, 209, 102, 0.7);
+  font-size: 30px;
+  color: #ffd166;
+  text-shadow: 0 0 18px rgba(255, 209, 102, 0.9);
+  transition: transform 0.3s ease;
 }
 
-/* ===== BET PANEL ===== */
-.bet-panel {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 14px;
+/* ===== SCORE FLASH ===== */
+.flash-green {
+  animation: greenFlash 0.6s ease;
 }
 
-.bet {
-    width: 48%;
+.flash-red {
+  animation: redFlash 0.6s ease;
+}
+
+@keyframes greenFlash {
+  0%   { color: #00ff99; transform: scale(1); }
+  50%  { transform: scale(1.35); }
+  100% { color: #ffd166; transform: scale(1); }
+}
+
+@keyframes redFlash {
+  0%   { color: #ff4d4d; transform: scale(1); }
+  50%  { transform: scale(1.35); }
+  100% { color: #ffd166; transform: scale(1); }
 }
 
 /* ===== OPTIONS ===== */
-/* OPTIONS CONTAINER */
 .options {
   display: flex;
-  flex-direction: column;   /* STACK OPTIONS */
-  gap: 12px;
-  margin-top: 15px;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
 }
 
-/* OPTION BUTTON */
 .options button {
-  width: 100%;
   padding: 14px;
   font-size: 16px;
   font-family: 'Orbitron', sans-serif;
@@ -171,75 +196,80 @@ input:focus {
   background: rgba(0, 20, 30, 0.9);
 
   border: 1px solid #00f7ff;
-  border-radius: 8px;
+  border-radius: 10px;
 
   cursor: pointer;
   transition: all 0.25s ease;
 }
 
-/* HOVER */
 .options button:hover {
-  background: rgba(0, 247, 255, 0.15);
-  transform: scale(1.02);
+  background: rgba(0, 247, 255, 0.2);
+  transform: scale(1.04);
 }
-
-/* SELECTED (BLUE) */
-.options button.selected {
-  background: rgba(0, 120, 255, 0.35);
-  border-color: #3399ff;
-  color: #ffffff;
-}
-
 
 /* ===== OPTION STATES ===== */
-.selected {
-    background: #2563eb !important;
-    box-shadow: 0 0 18px rgba(37, 99, 235, 0.85);
+.options button.selected {
+  background: rgba(0, 120, 255, 0.4);
+  border-color: #3399ff;
+  color: #ffffff;
+  box-shadow: 0 0 22px rgba(51, 153, 255, 0.95);
 }
 
 .correct {
-    background: #16a34a !important;
-    box-shadow: 0 0 18px rgba(22, 163, 74, 0.85);
+  background: #16a34a !important;
+  box-shadow: 0 0 22px rgba(22, 163, 74, 0.95);
 }
 
 .wrong {
-    background: #dc2626 !important;
-    box-shadow: 0 0 18px rgba(220, 38, 38, 0.85);
-}
-
-/* ===== HOST DISABLED OPTIONS ===== */
-button:disabled {
-    opacity: 0.7;
-    cursor: default;
+  background: #dc2626 !important;
+  box-shadow: 0 0 22px rgba(220, 38, 38, 0.95);
 }
 
 /* ===== FOOTER ===== */
 .footer {
-    margin-top: 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
+/* ===== TIMER ===== */
 #timer {
-    color: #00f0ff;
-    font-size: 16px;
-    text-shadow: 0 0 12px rgba(0, 240, 255, 0.65);
+  color: #00f0ff;
+  font-size: 18px;
+  text-shadow: 0 0 14px rgba(0, 240, 255, 0.8);
 }
 
-/* ===== RESTART BUTTON ===== */
-.restart-btn {
-    background: #1e40af;
-    color: #e5f9ff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
+/* ===== TIMER DANGER ===== */
+.timer-danger {
+  animation: dangerPulse 0.8s infinite;
 }
 
-.restart-btn:hover {
-    background: #2563eb;
+@keyframes dangerPulse {
+  0%   { color: #ff4d4d; }
+  50%  { color: #ffffff; }
+  100% { color: #ff4d4d; }
 }
 
+/* ===== WINNER TEXT ===== */
+#winnerText {
+  animation: winnerGlow 1.2s infinite alternate;
+}
 
+@keyframes winnerGlow {
+  from { text-shadow: 0 0 16px #ffd166; }
+  to   { text-shadow: 0 0 36px #00f0ff; }
+}
 
+/* ===== FULLSCREEN STAGE MODE ===== */
+:fullscreen .container {
+  transform: scale(1.1);
+  box-shadow: 0 0 70px rgba(0, 255, 255, 0.7);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 520px) {
+  .container {
+    width: 92%;
+  }
+}
