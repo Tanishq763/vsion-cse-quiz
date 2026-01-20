@@ -174,43 +174,46 @@ function startTimer() {
 /***********************
  * EVALUATE ROUND
  ***********************/
-function evaluate() {
+function evaluateRound() {
   db.ref("quiz").once("value", snap => {
-    const d = snap.val();
-    if (!d || !d.question) return;
+    const data = snap.val();
+    if (!data || !data.question) return;
 
-    const correct = d.question.correct;
+    const correctIndex = data.question.correct;
 
-    /* ========= TEAM A ========= */
-    if (d.teamA.answer === null) {
-      // ❌ No answer → 20% penalty
-      const penaltyA = Math.floor(d.teamA.score * 0.20);
-      db.ref("quiz/teamA/score").set(d.teamA.score - penaltyA);
-    } else if (d.teamA.answer === correct) {
-      // ✅ Correct → bet + 10%
-      const rewardA = Math.floor(d.teamA.bet * 0.1);
-      db.ref("quiz/teamA/score").set(d.teamA.score + rewardA);
-    } else {
-      // ❌ Wrong → lose bet
-      db.ref("quiz/teamA/score").set(d.teamA.score - d.teamA.bet);
+    // TEAM A
+    if(data.teamA.answer === NULL){
+     db.ref("quiz/teamA/score")
+        .set(data.teamA.score * 0.8);
+    }
+    else if (data.teamA.answer === correctIndex) {
+      const rewardA = Math.floor(data.teamA.bet * 0.1);
+      db.ref("quiz/teamA/score")
+        .set(data.teamA.score + rewardA);
+    }
+    else{
+    const rewardA = Math.floor(data.teamA.bet);
+      db.ref("quiz/teamA/score")
+        .set(data.teamA.score - rewardA);
     }
 
-    /* ========= TEAM B ========= */
-    if (d.teamB.answer === null) {
-      // ❌ No answer → 20% penalty
-      const penaltyB = Math.floor(d.teamB.score * 0.20);
-      db.ref("quiz/teamB/score").set(d.teamB.score - penaltyB);
-    } else if (d.teamB.answer === correct) {
-      // ✅ Correct → bet + 10%
-      const rewardB = Math.floor(d.teamB.bet * 0.1);
-      db.ref("quiz/teamB/score").set(d.teamB.score + rewardB);
-    } else {
-      // ❌ Wrong → lose bet
-      db.ref("quiz/teamB/score").set(d.teamB.score - d.teamB.bet);
+    // TEAM B
+    if(data.teamB.answer === NULL){
+     db.ref("quiz/teamB/score")
+        .set(data.teamB.score * 0.8);
+    }
+    else if (data.teamB.answer === correctIndex) {
+      const rewardB = Math.floor(data.teamB.bet * 0.1);
+      db.ref("quiz/teamB/score")
+        .set(data.teamB.score + rewardB);
+    }
+    else{
+    const rewardB = Math.floor(data.teamB.bet );
+      db.ref("quiz/teamB/score")
+        .set(data.teamB.score - rewardB);
     }
   });
 }
-
 
 /***********************
  * NEXT QUESTION
