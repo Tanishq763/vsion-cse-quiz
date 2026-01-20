@@ -1,6 +1,3 @@
-/***********************
- * FIREBASE SETUP
- ***********************/
 const firebaseConfig = {
   apiKey: "AIzaSyDREhmA6fyafxw8dJqh30B5pjfdEAjf3no",
   authDomain: "vision-cse-quiz.firebaseapp.com",
@@ -14,17 +11,13 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/***********************
- * SOUNDS
- ***********************/
+/* ===== SOUNDS ===== */
 const sndStart = document.getElementById("sndStart");
 const sndTick  = document.getElementById("sndTick");
 const sndWin   = document.getElementById("sndWin");
 const sndLose  = document.getElementById("sndLose");
 
-/***********************
- * GLOBALS
- ***********************/
+/* ===== GLOBALS ===== */
 let questions = [];
 let index = -1;
 let timerInterval = null;
@@ -33,12 +26,13 @@ let roundId = 0;
 
 let lastScoreA = 2000;
 let lastScoreB = 2000;
+let confettiPlayed = false;
 
-/***********************
- * RESET
- ***********************/
+/* ===== RESET ===== */
 function hardReset() {
   clearInterval(timerInterval);
+  confettiPlayed = false;
+
   db.ref("quiz").set({
     state: "IDLE",
     index: -1,
@@ -52,9 +46,7 @@ function hardReset() {
 }
 hardReset();
 
-/***********************
- * QUIZ CONTROLS
- ***********************/
+/* ===== CONTROLS ===== */
 function startQuiz() {
   sndStart.play();
   index = 0;
@@ -86,9 +78,7 @@ function toggleFullscreen() {
     document.exitFullscreen();
 }
 
-/***********************
- * LOAD QUESTION
- ***********************/
+/* ===== QUESTION ===== */
 function loadQuestion() {
   clearInterval(timerInterval);
   timeLeft = 20;
@@ -106,9 +96,7 @@ function loadQuestion() {
   db.ref("quiz/teamB").update({ bet: null, betRound: -1, answer: null });
 }
 
-/***********************
- * TIMER
- ***********************/
+/* ===== TIMER ===== */
 function startTimer() {
   db.ref("quiz/state").set("RUNNING");
   timer.classList.remove("timer-danger");
@@ -132,9 +120,7 @@ function startTimer() {
   }, 1000);
 }
 
-/***********************
- * LISTENER
- ***********************/
+/* ===== LISTENER ===== */
 db.ref("quiz").on("value", snap => {
   const d = snap.val();
   if (!d) return;
@@ -146,7 +132,6 @@ db.ref("quiz").on("value", snap => {
     flashScore(scoreA, d.teamA.score > lastScoreA);
     lastScoreA = d.teamA.score;
   }
-
   if (d.teamB.score !== lastScoreB) {
     flashScore(scoreB, d.teamB.score > lastScoreB);
     lastScoreB = d.teamB.score;
@@ -166,13 +151,44 @@ db.ref("quiz").on("value", snap => {
   }
 });
 
-/***********************
- * SCORE FLASH
- ***********************/
+/* ===== SCORE EFFECT ===== */
 function flashScore(el, win) {
   el.classList.remove("flash-green", "flash-red");
   void el.offsetWidth;
   el.classList.add(win ? "flash-green" : "flash-red");
-
   win ? sndWin.play() : sndLose.play();
+}
+
+/* ===== CONFETTI ===== */
+function launchConfetti() {
+  const colors = ["#00f0ff", "#ffd166", "#00ff99", "#ff4d4d", "#a855f7"];
+  for (let i = 0; i < 120; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    c.style.animationDelay = Math.random() * 0.3 + "s";
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3000);
+  }
+}
+
+/* ===== FINISH ===== */
+function finishQuiz() {
+  db.ref("quiz").once("value", snap => {
+    const d = snap.val();
+    let text = "🏆 DRAW!";
+    if (d.teamA.score > d.teamB.score) text = "🏆 TEAM A WINS!";
+    if (d.teamB.score > d.teamA.score) text = "🏆 TEAM B WINS!";
+
+    db.ref("quiz").update({ state: "FINISHED", winnerText: text });
+
+    winnerScreen.classList.remove("hidden");
+    winnerText.textContent = text;
+
+    if (!confettiPlayed) {
+      confettiPlayed = true;
+      launchConfetti();
+    }
+  });
 }
