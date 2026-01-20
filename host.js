@@ -14,6 +14,170 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+const allquestions = [
+
+/* =========================
+   C PROGRAMMING
+========================= */
+
+{
+  question: "Which of the following is a valid variable name in C?",
+  options: ["2num", "num_2", "float", "num-2"],
+  correct: 1
+},
+{
+  question: "Which symbol is used to terminate a statement in C?",
+  options: [":", ".", ";", ","],
+  correct: 2
+},
+{
+  question: "What is the default value of an uninitialized local variable in C?",
+  options: ["0", "Garbage value", "NULL", "Depends on compiler"],
+  correct: 1
+},
+{
+  question: "Which data type is used to store decimal values in C?",
+  options: ["int", "char", "float", "long"],
+  correct: 2
+},
+{
+  question: "Which header file is required for printf()?",
+  options: ["stdlib.h", "stdio.h", "string.h", "math.h"],
+  correct: 1
+},
+{
+  question: "What does sizeof operator return?",
+  options: ["Value", "Address", "Size in bytes", "Data type"],
+  correct: 2
+},
+{
+  question: "Which loop is guaranteed to execute at least once?",
+  options: ["for", "while", "do-while", "foreach"],
+  correct: 2
+},
+{
+  question: "Which operator is used to access value at an address?",
+  options: ["&", "*", "#", "%"],
+  correct: 1
+},
+{
+  question: "What is the correct way to declare a pointer?",
+  options: ["int p;", "int *p;", "pointer p;", "int &p;"],
+  correct: 1
+},
+{
+  question: "Which function is used to dynamically allocate memory?",
+  options: ["alloc()", "malloc()", "memory()", "new()"],
+  correct: 1
+},
+
+/* =========================
+   WEB DEVELOPMENT (HTML)
+========================= */
+
+{
+  question: "What does HTML stand for?",
+  options: [
+    "Hyper Trainer Marking Language",
+    "Hyper Text Markup Language",
+    "Hyper Text Marketing Language",
+    "Hyper Transfer Markup Language"
+  ],
+  correct: 1
+},
+{
+  question: "Which HTML tag is used to create a hyperlink?",
+  options: ["<link>", "<a>", "<href>", "<url>"],
+  correct: 1
+},
+{
+  question: "Which attribute is used to open a link in a new tab?",
+  options: ["new", "open", "target", "href"],
+  correct: 2
+},
+{
+  question: "Which HTML tag is used to insert an image?",
+  options: ["<img>", "<image>", "<pic>", "<src>"],
+  correct: 0
+},
+{
+  question: "Which tag is used for the largest heading?",
+  options: ["<heading>", "<h6>", "<h1>", "<head>"],
+  correct: 2
+},
+
+/* =========================
+   CSS
+========================= */
+
+{
+  question: "What does CSS stand for?",
+  options: [
+    "Creative Style Sheets",
+    "Computer Style Sheets",
+    "Cascading Style Sheets",
+    "Colorful Style Sheets"
+  ],
+  correct: 2
+},
+{
+  question: "Which CSS property changes text color?",
+  options: ["font-color", "text-color", "color", "fgcolor"],
+  correct: 2
+},
+{
+  question: "Which symbol is used for class selector?",
+  options: [".", "#", "*", "&"],
+  correct: 0
+},
+{
+  question: "Which CSS property is used to change background color?",
+  options: ["bgcolor", "background-color", "color", "background"],
+  correct: 1
+},
+{
+  question: "Which unit is relative to screen size?",
+  options: ["px", "cm", "em", "vw"],
+  correct: 3
+},
+
+/* =========================
+   JAVASCRIPT
+========================= */
+
+{
+  question: "Which keyword is used to declare a variable in JavaScript?",
+  options: ["int", "var", "float", "string"],
+  correct: 1
+},
+{
+  question: "Which symbol is used for single-line comments in JavaScript?",
+  options: ["<!-- -->", "#", "//", "/* */"],
+  correct: 2
+},
+{
+  question: "Which function prints output to the browser console?",
+  options: ["print()", "log()", "console.log()", "write()"],
+  correct: 2
+},
+{
+  question: "Which data type is NOT supported in JavaScript?",
+  options: ["Number", "Boolean", "Character", "String"],
+  correct: 2
+},
+{
+  question: "What does DOM stand for?",
+  options: [
+    "Document Object Model",
+    "Data Object Method",
+    "Digital Output Mode",
+    "Document Oriented Model"
+  ],
+  correct: 0
+}
+
+];
+
 /***********************
  * DOM ELEMENTS (🔥 FIX)
  ***********************/
@@ -260,4 +424,5 @@ window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz;
 window.toggleFullscreen = toggleFullscreen;
+
 
