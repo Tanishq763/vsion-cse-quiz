@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <title>Vision Quiz – Host</title>
 
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -20,9 +21,7 @@
 
   <div class="host-controls">
     <button id="startBtn" class="start-btn" onclick="startQuiz()">Start Quiz</button>
-    <button id="nextBtn" class="start-btn hidden" onclick="nextQuestion()">Next</button>
-    <button class="start-btn" onclick="addTime(5)">+5s</button>
-    <button class="start-btn" onclick="addTime(-5)">-5s</button>
+    <button id="nextBtn" class="start-btn hidden" onclick="nextQuestion()">Next Question</button>
     <button class="start-btn danger" onclick="restartQuiz()">Restart</button>
   </div>
 
@@ -39,12 +38,6 @@
       <h3>TEAM B</h3>
       <span id="scoreB">2000</span>
     </div>
-  </div>
-
-  <div class="host-live">
-    <p>👀 Live Bets</p>
-    <p>A: <span id="betA">--</span> | B: <span id="betB">--</span></p>
-    <p>Answered: A <span id="ansA">❌</span> | B <span id="ansB">❌</span></p>
   </div>
 
   <div id="winnerScreen" class="hidden">
