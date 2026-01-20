@@ -4,56 +4,74 @@ const firebaseConfig = {
   databaseURL: "https://vision-cse-quiz-default-rtdb.firebaseio.com",
   projectId: "vision-cse-quiz"
 };
-if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db=firebase.database();
 
-const team=new URLSearchParams(location.search).get("team");
-document.getElementById("teamTitle").textContent="TEAM "+team;
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-const qEl=document.getElementById("question");
-const optEl=document.getElementById("options");
-const betEl=document.getElementById("betInput");
-const timerEl=document.getElementById("timer");
-const scoreEl=document.getElementById("myScore");
+const team = new URLSearchParams(location.search).get("team");
+document.getElementById("teamTitle").textContent = "TEAM " + team;
 
-let rendered=-1;
+const qEl = document.getElementById("question");
+const optEl = document.getElementById("options");
+const betEl = document.getElementById("betInput");
+const timerEl = document.getElementById("timer");
+const scoreEl = document.getElementById("myScore");
 
-db.ref("quiz").on("value",s=>{
-  const d=s.val(); if(!d) return;
-  const me=d["team"+team];
-  scoreEl.textContent=me.score;
-  timerEl.textContent="⏱ "+d.time;
+let lastQuestion = null;
 
-  if(d.question && d.roundId!==rendered){
-    rendered=d.roundId;
-    qEl.textContent=d.question.text;
-    betEl.value=me.bet??"";
-    render(d.question.options);
+db.ref("quiz").on("value", snap => {
+  const d = snap.val();
+  if (!d) return;
+
+  const me = d["team"+team];
+  scoreEl.textContent = me.score;
+  timerEl.textContent = "⏱ " + d.time;
+
+  if (d.question && d.question.text !== lastQuestion) {
+    lastQuestion = d.question.text;
+    qEl.textContent = d.question.text;
+    betEl.value = me.bet ?? "";
+    renderOptions(d.question.options);
   }
 
-  betEl.disabled=d.state!=="RUNNING";
-  if(d.state==="LOCKED") reveal(me.answer,d.question.correct);
+  betEl.disabled = d.state !== "RUNNING";
+
+  if (me.answer !== null && d.state === "RUNNING") {
+    [...optEl.children].forEach((b, i) =>
+      b.classList.toggle("selected", i === me.answer)
+    );
+  }
+
+  if (d.state === "LOCKED") reveal(me.answer, d.question.correct);
+  if (d.state === "FINISHED") qEl.textContent = "Quiz Finished!";
 });
 
-function render(opts){
-  optEl.innerHTML="";
-  opts.forEach((o,i)=>{
-    const b=document.createElement("button");
-    b.textContent=o;
-    b.onclick=()=>db.ref(`quiz/team${team}/answer`).set(i);
-    optEl.appendChild(b);
+function renderOptions(options) {
+  optEl.innerHTML = "";
+  options.forEach((opt, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = opt;
+    btn.dataset.index = i;
+
+    btn.onclick = () => {
+      [...optEl.children].forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      db.ref(`quiz/team${team}/answer`).set(i);
+    };
+
+    optEl.appendChild(btn);
   });
 }
 
-betEl.oninput=()=>{
-  const v=parseInt(betEl.value);
-  if(v>=0) db.ref(`quiz/team${team}/bet`).set(v);
+betEl.oninput = () => {
+  const val = parseInt(betEl.value);
+  if (!isNaN(val)) db.ref(`quiz/team${team}/bet`).set(val);
 };
 
-function reveal(ans,correct){
-  [...optEl.children].forEach((b,i)=>{
-    if(i===correct) b.classList.add("correct");
-    else if(i===ans) b.classList.add("wrong");
-    b.disabled=true;
+function reveal(ans, correct) {
+  [...optEl.children].forEach((b, i) => {
+    if (i === correct) b.classList.add("correct");
+    else if (i === ans) b.classList.add("wrong");
+    b.disabled = true;
   });
 }
