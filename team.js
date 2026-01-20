@@ -43,6 +43,7 @@ const resultText = document.getElementById("resultText");
  * LOCAL STATE
  ***********************/
 let lastRoundId = -1;
+let myScore = 0;
 
 /***********************
  * LISTEN TO QUIZ STATE
@@ -51,8 +52,11 @@ db.ref("quiz").on("value", snap => {
   const data = snap.val();
   if (!data) return;
 
+  const teamData = data[`team${team}`];
+
   // Always update score
-  myScoreEl.textContent = data[`team${team}`]?.score ?? 0;
+  myScore = teamData?.score ?? 0;
+  myScoreEl.textContent = myScore;
 
   /* ---------- IDLE ---------- */
   if (data.state === "IDLE") {
@@ -73,7 +77,6 @@ db.ref("quiz").on("value", snap => {
 
     resultBox.classList.remove("hidden");
     resultText.textContent = data.winnerText ?? "";
-
     return;
   }
 
@@ -118,16 +121,39 @@ function renderOptions(options) {
 }
 
 /***********************
- * BET INPUT
+ * BET INPUT (🔥 FIXED)
  ***********************/
-betInput.addEventListener("change", () => {
+betInput.addEventListener("change", async () => {
   const bet = parseInt(betInput.value);
-  if (isNaN(bet)) return;
 
-  // 🔥 Attach bet to CURRENT round only
-  db.ref(`quiz/team${team}`).update({
-    bet,
-    betRound: lastRoundId
+  if (isNaN(bet) || bet <= 0) {
+    betInput.value = "";
+    return;
+  }
+
+  // ❌ prevent over-betting
+  if (bet > myScore) {
+    alert("Not enough points");
+    betInput.value = "";
+    return;
+  }
+
+  // 🔥 atomic transaction (safe deduction)
+  const teamRef = db.ref(`quiz/team${team}`);
+
+  teamRef.transaction(curr => {
+    if (!curr) return curr;
+
+    // ❌ already bet this round
+    if (curr.betRound === lastRoundId) return;
+
+    if (bet > curr.score) return;
+
+    return {
+      ...curr,
+      score: curr.score - bet,   // 🔥 deduct immediately
+      bet: bet,
+      betRound: lastRoundId
+    };
   });
 });
-
