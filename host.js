@@ -26,7 +26,7 @@ const allquestions = [
 ];
 
 /***********************
- * DOM
+ * DOM ELEMENTS
  ***********************/
 const startBtn = document.getElementById("startBtn");
 const nextBtn = document.getElementById("nextBtn");
@@ -38,18 +38,7 @@ const winnerScreen = document.getElementById("winnerScreen");
 const winnerText = document.getElementById("winnerText");
 
 /***********************
- * SOUND CONTROLS
- ***********************/
-const sndTick = document.getElementById("sndTick");
-const sndWin  = document.getElementById("sndWin");
-const sndLose = document.getElementById("sndLose");
-
-const toggleTick = document.getElementById("toggleTick");
-const toggleWin  = document.getElementById("toggleWin");
-const toggleLose = document.getElementById("toggleLose");
-
-/***********************
- * GLOBALS
+ * GLOBAL STATE
  ***********************/
 let index = -1;
 let timer = null;
@@ -57,13 +46,23 @@ let timeLeft = 20;
 let roundId = 0;
 
 /***********************
- * RESET + PAGE RELOAD
+ * HARD RESET (FIRST LOAD ONLY)
  ***********************/
-function restartQuiz() {
-  db.ref("quiz").remove().then(() => {
-    location.reload(); // 🔥 reload host
+function hardReset() {
+  clearInterval(timer);
+  timer = null;
+
+  db.ref("quiz").set({
+    state: "IDLE",
+    roundId: 0,
+    time: "--",
+    question: null,
+    winnerText: "",
+    teamA: { score: 2000, bet: null, answer: null },
+    teamB: { score: 2000, bet: null, answer: null }
   });
 }
+hardReset();
 
 /***********************
  * START QUIZ
@@ -71,71 +70,88 @@ function restartQuiz() {
 function startQuiz() {
   index = 0;
   loadQuestion();
+
   startBtn.classList.add("hidden");
   nextBtn.classList.remove("hidden");
   restartBtn.classList.remove("hidden");
 }
 
 /***********************
- * LOAD QUESTION
+ * LOAD QUESTION (⚠️ SCORE SAFE)
  ***********************/
 function loadQuestion() {
   clearInterval(timer);
   timeLeft = 20;
   roundId++;
 
-  db.ref("quiz").set({
+  // ✅ UPDATE ONLY – DO NOT TOUCH SCORE
+  db.ref("quiz").update({
     state: "RUNNING",
     roundId,
     time: timeLeft,
-    question: allquestions[index],
-    teamA: { score: getScore("A"), bet:null, answer:null },
-    teamB: { score: getScore("B"), bet:null, answer:null }
+    question: allquestions[index]
   });
 
-  timer = setInterval(() => {
-    timeLeft--;
-    db.ref("quiz/time").set(timeLeft);
-    timerEl.textContent = timeLeft;
+  // reset per-round values only
+  db.ref("quiz/teamA").update({ bet: null, answer: null });
+  db.ref("quiz/teamB").update({ bet: null, answer: null });
 
-    if (timeLeft <= 5 && toggleTick.checked) sndTick.play().catch(()=>{});
-
-    if (timeLeft <= 0) {
-      clearInterval(timer);
-      db.ref("quiz/state").set("LOCKED");
-      evaluate();
-    }
-  },1000);
+  startTimer();
 }
 
 /***********************
- * SCORE EVALUATION
+ * TIMER (STARTS IMMEDIATELY)
+ ***********************/
+function startTimer() {
+  timerEl.textContent = timeLeft;
+
+  timer = setInterval(() => {
+    timeLeft--;
+    timerEl.textContent = timeLeft;
+    db.ref("quiz/time").set(timeLeft);
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      timer = null;
+      db.ref("quiz/state").set("LOCKED");
+      evaluate();
+    }
+  }, 1000);
+}
+
+/***********************
+ * EVALUATE (FINAL SCORING LOGIC)
  ***********************/
 function evaluate() {
   db.ref("quiz").once("value", snap => {
     const d = snap.val();
-    const c = d.question.correct;
+    if (!d || !d.question) return;
 
-    updateTeam("A", d.teamA, c);
-    updateTeam("B", d.teamB, c);
+    const correct = d.question.correct;
+
+    // TEAM A
+    let scoreA = d.teamA.score;
+    if (d.teamA.answer === null) {
+      scoreA -= Math.floor(scoreA * 0.20);
+    } else if (d.teamA.answer === correct) {
+      scoreA += Math.floor(d.teamA.bet * 1.10);
+    } else {
+      scoreA -= d.teamA.bet;
+    }
+
+    // TEAM B
+    let scoreB = d.teamB.score;
+    if (d.teamB.answer === null) {
+      scoreB -= Math.floor(scoreB * 0.20);
+    } else if (d.teamB.answer === correct) {
+      scoreB += Math.floor(d.teamB.bet * 1.10);
+    } else {
+      scoreB -= d.teamB.bet;
+    }
+
+    db.ref("quiz/teamA/score").set(scoreA);
+    db.ref("quiz/teamB/score").set(scoreB);
   });
-}
-
-function updateTeam(team, data, correct) {
-  let score = data.score;
-
-  if (data.answer === null) {
-    score -= Math.floor(score * 0.2);
-    if (toggleLose.checked) sndLose.play().catch(()=>{});
-  } else if (data.answer === correct) {
-    score += Math.floor(data.bet * 1.1);
-    if (toggleWin.checked) sndWin.play().catch(()=>{});
-  } else {
-    score -= data.bet;
-    if (toggleLose.checked) sndLose.play().catch(()=>{});
-  }
-
-  db.ref(`quiz/team${team}/score`).set(score);
 }
 
 /***********************
@@ -151,7 +167,7 @@ function nextQuestion() {
 }
 
 /***********************
- * FINISH
+ * FINISH QUIZ
  ***********************/
 function finishQuiz() {
   db.ref("quiz").once("value", snap => {
@@ -159,26 +175,37 @@ function finishQuiz() {
     let text = "🏆 DRAW!";
     if (d.teamA.score > d.teamB.score) text = "🏆 TEAM A WINS!";
     if (d.teamB.score > d.teamA.score) text = "🏆 TEAM B WINS!";
+
+    db.ref("quiz").update({
+      state: "FINISHED",
+      winnerText: text
+    });
+
     winnerText.textContent = text;
     winnerScreen.classList.remove("hidden");
   });
 }
 
 /***********************
- * HELPERS
+ * RESTART QUIZ (RELOAD ALL)
  ***********************/
-function getScore(team) {
-  return 2000;
+function restartQuiz() {
+  db.ref("quiz").remove().then(() => {
+    location.reload();
+  });
 }
 
 /***********************
- * LISTENER
+ * FIREBASE LISTENER
  ***********************/
 db.ref("quiz").on("value", snap => {
   const d = snap.val();
   if (!d) return;
+
   scoreAEl.textContent = d.teamA.score;
   scoreBEl.textContent = d.teamB.score;
+
+  // enable NEXT only after round ends
   nextBtn.disabled = d.state !== "LOCKED";
 });
 
