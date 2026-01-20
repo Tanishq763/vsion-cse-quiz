@@ -1,6 +1,7 @@
 /***********************
  * FIREBASE SETUP
  ***********************/
+
 const firebaseConfig = {
   apiKey: "AIzaSyDREhmA6fyafxw8dJqh30B5pjfdEAjf3no",
   authDomain: "vision-cse-quiz.firebaseapp.com",
@@ -13,13 +14,9 @@ const firebaseConfig = {
 
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
 const allquestions = [
 
-/* =========================
-   C PROGRAMMING
-========================= */
-
+/* ===== C PROGRAMMING ===== */
 {
   question: "Which of the following is a valid variable name in C?",
   options: ["2num", "num_2", "float", "num-2"],
@@ -45,36 +42,8 @@ const allquestions = [
   options: ["stdlib.h", "stdio.h", "string.h", "math.h"],
   correct: 1
 },
-{
-  question: "Which operator is used to get the address of a variable?",
-  options: ["*", "&", "#", "%"],
-  correct: 1
-},
-{
-  question: "Which loop executes at least once?",
-  options: ["for", "while", "do-while", "foreach"],
-  correct: 2
-},
-{
-  question: "Which function is used to allocate memory dynamically?",
-  options: ["alloc()", "malloc()", "memory()", "new()"],
-  correct: 1
-},
-{
-  question: "What does sizeof return?",
-  options: ["Value", "Address", "Size in bytes", "Data type"],
-  correct: 2
-},
-{
-  question: "Which keyword is used to exit a loop?",
-  options: ["exit", "stop", "break", "return"],
-  correct: 2
-},
 
-/* =========================
-   HTML
-========================= */
-
+/* ===== HTML ===== */
 {
   question: "What does HTML stand for?",
   options: [
@@ -96,20 +65,12 @@ const allquestions = [
   correct: 2
 },
 {
-  question: "Which tag is used to display an image?",
+  question: "Which tag is used to insert an image?",
   options: ["<image>", "<img>", "<pic>", "<src>"],
   correct: 1
 },
-{
-  question: "Which tag represents the largest heading?",
-  options: ["<h6>", "<h4>", "<h1>", "<head>"],
-  correct: 2
-},
 
-/* =========================
-   CSS
-========================= */
-
+/* ===== CSS ===== */
 {
   question: "What does CSS stand for?",
   options: [
@@ -121,30 +82,17 @@ const allquestions = [
   correct: 1
 },
 {
-  question: "Which property changes text color?",
+  question: "Which CSS property changes text color?",
   options: ["font-color", "text-color", "color", "fgcolor"],
   correct: 2
 },
 {
-  question: "Which symbol is used for class selector?",
+  question: "Which symbol is used for class selector in CSS?",
   options: ["#", ".", "*", "&"],
   correct: 1
 },
-{
-  question: "Which CSS property sets background color?",
-  options: ["bgcolor", "color", "background-color", "background"],
-  correct: 2
-},
-{
-  question: "Which unit is relative to viewport width?",
-  options: ["px", "em", "%", "vw"],
-  correct: 3
-},
 
-/* =========================
-   JAVASCRIPT
-========================= */
-
+/* ===== JAVASCRIPT ===== */
 {
   question: "Which keyword is used to declare a variable in JavaScript?",
   options: ["int", "var", "float", "string"],
@@ -156,16 +104,6 @@ const allquestions = [
   correct: 1
 },
 {
-  question: "Which function prints output to console?",
-  options: ["print()", "log()", "console.log()", "write()"],
-  correct: 2
-},
-{
-  question: "Which data type is NOT supported in JavaScript?",
-  options: ["Number", "Boolean", "Character", "String"],
-  correct: 2
-},
-{
   question: "What does DOM stand for?",
   options: [
     "Document Object Model",
@@ -175,12 +113,8 @@ const allquestions = [
   ],
   correct: 0
 }
-
 ];
-
-
 /***********************
-
  * DOM ELEMENTS
  ***********************/
 const startBtn = document.getElementById("startBtn");
@@ -212,7 +146,6 @@ let index = -1;
 let timerInterval = null;
 let timeLeft = 20;
 let roundId = 0;
-let timerStarted = false;
 
 let lastScoreA = 2000;
 let lastScoreB = 2000;
@@ -224,7 +157,6 @@ let confettiPlayed = false;
 function hardReset() {
   clearInterval(timerInterval);
   timerInterval = null;
-  timerStarted = false;
   confettiPlayed = false;
 
   timerEl.textContent = "--";
@@ -248,11 +180,6 @@ hardReset();
  * QUIZ CONTROLS
  ***********************/
 function startQuiz() {
-  if (typeof allquestions === "undefined") {
-    alert("Questions not loaded!");
-    return;
-  }
-
   playSound(sndStart);
 
   index = 0;
@@ -288,40 +215,35 @@ function toggleFullscreen() {
 }
 
 /***********************
- * LOAD QUESTION
+ * LOAD QUESTION + START TIMER
  ***********************/
 function loadQuestion() {
   clearInterval(timerInterval);
-  timerInterval = null;
-  timerStarted = false;
-
   timeLeft = 20;
   roundId++;
 
-  timerEl.textContent = "--";
+  timerEl.textContent = timeLeft;
   timerEl.classList.remove("timer-danger");
 
   db.ref("quiz").update({
-    state: "BETTING",
+    state: "RUNNING",
     index,
     roundId,
-    time: "--",
+    time: timeLeft,
     question: questions[index]
   });
 
+  // reset bets/answers
   db.ref("quiz/teamA").update({ bet: null, betRound: -1, answer: null });
   db.ref("quiz/teamB").update({ bet: null, betRound: -1, answer: null });
+
+  startTimer();
 }
 
 /***********************
- * START TIMER (ONLY ONCE)
+ * TIMER (STARTS IMMEDIATELY)
  ***********************/
 function startTimer() {
-  if (timerStarted) return;
-  timerStarted = true;
-
-  db.ref("quiz/state").set("RUNNING");
-
   timerInterval = setInterval(() => {
     timeLeft--;
     timerEl.textContent = timeLeft;
@@ -338,7 +260,7 @@ function startTimer() {
       timerEl.classList.remove("timer-danger");
 
       db.ref("quiz/state").set("LOCKED");
-      evaluate();
+      evaluate(); // 🔥 score update ONLY here
     }
   }, 1000);
 }
@@ -350,7 +272,6 @@ db.ref("quiz").on("value", snap => {
   const d = snap.val();
   if (!d) return;
 
-  // Scores
   scoreAEl.textContent = d.teamA.score;
   scoreBEl.textContent = d.teamB.score;
 
@@ -364,16 +285,7 @@ db.ref("quiz").on("value", snap => {
     lastScoreB = d.teamB.score;
   }
 
-  // ✅ Start timer when both bets placed
-  if (
-    d.state === "BETTING" &&
-    d.teamA.betRound === d.roundId &&
-    d.teamB.betRound === d.roundId
-  ) {
-    startTimer();
-  }
-
-  // ✅ Enable NEXT button only after round is LOCKED
+  // NEXT button enabled only after round finishes
   if (d.state === "LOCKED") {
     nextBtn.disabled = false;
     nextBtn.classList.remove("disabled-btn");
@@ -394,7 +306,7 @@ function flashScore(el, win) {
 }
 
 /***********************
- * EVALUATE (SCORING)
+ * EVALUATE (ONLY ON TIMER END)
  ***********************/
 function evaluate() {
   db.ref("quiz").once("value", snap => {
@@ -403,14 +315,20 @@ function evaluate() {
 
     const correct = d.question.correct;
 
-    if (d.teamA.answer !== null && d.teamA.answer === correct) {
-      const rewardA = Math.floor(d.teamA.bet * 1.10);
-      db.ref("quiz/teamA/score").set(d.teamA.score + rewardA);
+    // TEAM A
+    if (d.teamA.answer !== null) {
+      if (d.teamA.answer === correct) {
+        const rewardA = Math.floor(d.teamA.bet * 1.10);
+        db.ref("quiz/teamA/score").set(d.teamA.score + rewardA);
+      }
     }
 
-    if (d.teamB.answer !== null && d.teamB.answer === correct) {
-      const rewardB = Math.floor(d.teamB.bet * 1.10);
-      db.ref("quiz/teamB/score").set(d.teamB.score + rewardB);
+    // TEAM B
+    if (d.teamB.answer !== null) {
+      if (d.teamB.answer === correct) {
+        const rewardB = Math.floor(d.teamB.bet * 1.10);
+        db.ref("quiz/teamB/score").set(d.teamB.score + rewardB);
+      }
     }
   });
 }
@@ -458,7 +376,7 @@ function finishQuiz() {
 }
 
 /***********************
- * EXPORTS (IMPORTANT)
+ * EXPORTS
  ***********************/
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
