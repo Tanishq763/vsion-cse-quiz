@@ -183,17 +183,28 @@ function evaluateRound() {
 
     // TEAM A
     if (data.teamA.answer === correctIndex) {
-      const rewardA = Math.floor(data.teamA.bet * 1.1);
+      const rewardA = Math.floor(data.teamA.bet * 0.1);
       db.ref("quiz/teamA/score")
         .set(data.teamA.score + rewardA);
+    }
+    else{
+    const rewardA = Math.floor(data.teamA.bet);
+      db.ref("quiz/teamA/score")
+        .set(data.teamA.score - rewardA);
     }
 
     // TEAM B
     if (data.teamB.answer === correctIndex) {
-      const rewardB = Math.floor(data.teamB.bet * 1.1);
+      const rewardB = Math.floor(data.teamB.bet * 0.1);
       db.ref("quiz/teamB/score")
         .set(data.teamB.score + rewardB);
     }
+    else{
+    const rewardB = Math.floor(data.teamB.bet);
+      db.ref("quiz/teamB/score")
+        .set(data.teamA.score - rewardB);
+    }
+
   });
 }
 
@@ -236,15 +247,25 @@ function finishQuiz() {
 /***********************
  * FIREBASE LISTENER
  ***********************/
+
 db.ref("quiz").on("value", snap => {
   const d = snap.val();
   if (!d) return;
 
+  // Update scores
   scoreAEl.textContent = d.teamA.score;
   scoreBEl.textContent = d.teamB.score;
 
-  nextBtn.disabled = d.state !== "LOCKED";
+  // 🔥 ENABLE NEXT ONLY AFTER TIMER ENDS
+  if (d.state === "LOCKED") {
+    nextBtn.disabled = false;
+    nextBtn.classList.remove("disabled-btn");
+  } else {
+    nextBtn.disabled = true;
+    nextBtn.classList.add("disabled-btn");
+  }
 });
+
 
 /***********************
  * EXPORTS
@@ -252,3 +273,4 @@ db.ref("quiz").on("value", snap => {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = hardReset;
+
