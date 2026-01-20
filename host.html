@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Host | Vision CSE Quiz</title>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -19,7 +18,9 @@
 
   <div class="footer" style="justify-content:center; gap:12px;">
     <button id="startBtn" class="start-btn" onclick="startQuiz()">Start Quiz</button>
-    <button id="nextBtn" class="start-btn hidden" onclick="nextQuestion()">Next Question</button>
+    <button id="nextBtn" class="start-btn hidden disabled-btn" disabled onclick="nextQuestion()">
+      Next Question
+    </button>
     <button id="restartBtn" class="start-btn hidden" onclick="restartQuiz()">Restart Quiz</button>
   </div>
 
@@ -27,23 +28,20 @@
     ⏱ Timer: <span id="timer">--</span>
   </p>
 
-  <!-- 🔥 SCOREBOARD -->
   <div class="scoreboard">
     <div class="team">
       <h3>TEAM A</h3>
       <span id="scoreA">2000</span>
-      <p class="points-label">Points</p>
+      <p>Points</p>
     </div>
-
     <div class="team">
       <h3>TEAM B</h3>
       <span id="scoreB">2000</span>
-      <p class="points-label">Points</p>
+      <p>Points</p>
     </div>
   </div>
 
-  <!-- 🏆 WINNER -->
-  <div id="winnerScreen" class="hidden" style="text-align:center; margin-top:25px;">
+  <div id="winnerScreen" class="hidden">
     <h2 id="winnerText"></h2>
   </div>
 
