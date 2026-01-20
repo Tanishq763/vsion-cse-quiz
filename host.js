@@ -326,7 +326,7 @@ const allquestions = [
 let questions = [];
 let index = -1;
 let timer = null;
-let timeLeft = 10;
+let timeLeft = 20;
 let roundId = 0;
 
 /***********************
@@ -371,7 +371,7 @@ function startQuiz() {
  ***********************/
 function nextQuestion() {
   index++;
-  if (index >= 10) {
+  if (index >= 5) {
     finishQuiz();
     return;
   }
@@ -385,7 +385,7 @@ function restartQuiz() {
   clearInterval(timer);
   index = -1;
   roundId = 0;
-  timeLeft = 10;
+  timeLeft = 20;
 
   // 🔥 FULL HARD RESET — NO LEFTOVER DATA
   db.ref("quiz").set({
@@ -426,7 +426,7 @@ function restartQuiz() {
  ***********************/
 function loadQuestion() {
   clearInterval(timer);
-  timeLeft = 10;
+  timeLeft = 20;
   roundId++;
 
   const q = questions[index];
@@ -545,6 +545,7 @@ function finishQuiz() {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz;
+
 
 
 
