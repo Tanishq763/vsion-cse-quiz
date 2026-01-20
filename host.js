@@ -182,11 +182,7 @@ function evaluateRound() {
     const correctIndex = data.question.correct;
 
     // TEAM A
-    if(data.teamA.answer === NULL){
-     db.ref("quiz/teamA/score")
-        .set(data.teamA.score * 0.8);
-    }
-    else if (data.teamA.answer === correctIndex) {
+     if (data.teamA.answer === correctIndex) {
       const rewardA = Math.floor(data.teamA.bet * 0.1);
       db.ref("quiz/teamA/score")
         .set(data.teamA.score + rewardA);
@@ -198,11 +194,7 @@ function evaluateRound() {
     }
 
     // TEAM B
-    if(data.teamB.answer === NULL){
-     db.ref("quiz/teamB/score")
-        .set(data.teamB.score * 0.8);
-    }
-    else if (data.teamB.answer === correctIndex) {
+    if (data.teamB.answer === correctIndex) {
       const rewardB = Math.floor(data.teamB.bet * 0.1);
       db.ref("quiz/teamB/score")
         .set(data.teamB.score + rewardB);
@@ -280,5 +272,6 @@ db.ref("quiz").on("value", snap => {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = hardReset;
+
 
 
