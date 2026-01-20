@@ -51,11 +51,11 @@ db.ref("quiz").on("value", snap => {
 
   const myData = data[`team${team}`];
 
-  /* ----- SCORE ----- */
+  /* SCORE */
   myScore = myData?.score ?? 0;
   myScoreEl.textContent = myScore;
 
-  /* ----- IDLE ----- */
+  /* IDLE */
   if (data.state === "IDLE") {
     questionEl.textContent = "Waiting for host to start quiz…";
     optionsEl.innerHTML = "";
@@ -65,7 +65,7 @@ db.ref("quiz").on("value", snap => {
     return;
   }
 
-  /* ----- FINISHED ----- */
+  /* FINISHED */
   if (data.state === "FINISHED") {
     questionEl.textContent = "Quiz Finished";
     optionsEl.innerHTML = "";
@@ -75,12 +75,12 @@ db.ref("quiz").on("value", snap => {
     return;
   }
 
-  /* ----- QUESTION ----- */
+  /* QUESTION */
   if (data.question) {
     questionEl.textContent = data.question.question;
   }
 
-  /* ----- TIMER ----- */
+  /* TIMER */
   timerEl.textContent = `⏱ ${data.time ?? "--"}`;
 
   if (typeof data.time === "number" && data.time <= 5 && data.time > 0) {
@@ -89,15 +89,15 @@ db.ref("quiz").on("value", snap => {
     timerEl.classList.remove("timer-danger");
   }
 
-  /* ----- NEW ROUND ----- */
+  /* NEW ROUND */
   if (data.roundId !== lastRoundId && data.question) {
     lastRoundId = data.roundId;
     renderOptions(data.question.options);
     betInput.value = "";
   }
 
-  /* ----- BET INPUT ENABLE ----- */
-  betInput.disabled = data.state !== "BETTING";
+  /* 🔥 BETTING ENABLED DURING RUNNING */
+  betInput.disabled = data.state !== "RUNNING";
 });
 
 /***********************
@@ -124,7 +124,7 @@ function renderOptions(options) {
 }
 
 /***********************
- * BET INPUT (SAFE + ATOMIC)
+ * BET INPUT (SAFE & ATOMIC)
  ***********************/
 betInput.addEventListener("change", () => {
   const bet = parseInt(betInput.value);
@@ -148,15 +148,14 @@ betInput.addEventListener("change", () => {
     // ❌ already bet this round
     if (curr.betRound === lastRoundId) return;
 
-    // ❌ safety check
+    // ❌ safety
     if (bet > curr.score) return;
 
     return {
       ...curr,
-      score: curr.score - bet, // 🔥 deduct immediately
+      score: curr.score - bet,   // 🔥 deduct immediately
       bet: bet,
       betRound: lastRoundId
     };
   });
 });
-
