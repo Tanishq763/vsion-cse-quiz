@@ -29,7 +29,7 @@ const winnerText = document.getElementById("winnerText");
 /***********************
  * SOUNDS
  ***********************/
-const sndStart = document.getElementById("sndStart");
+
 const sndTick  = document.getElementById("sndTick");
 const sndWin   = document.getElementById("sndWin");
 const sndLose  = document.getElementById("sndLose");
@@ -77,7 +77,7 @@ hardReset();
  * QUIZ CONTROLS
  ***********************/
 function startQuiz() {
-  sndStart.play();
+
 
   index = 0;
   questions = [...allquestions].sort(() => Math.random() - 0.5);
@@ -260,3 +260,4 @@ window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz;
 window.toggleFullscreen = toggleFullscreen;
+
