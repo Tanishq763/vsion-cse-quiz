@@ -46,33 +46,33 @@ const allquestions = [
   correct: 1
 },
 {
-  question: "What does sizeof operator return?",
-  options: ["Value", "Address", "Size in bytes", "Data type"],
-  correct: 2
+  question: "Which operator is used to get the address of a variable?",
+  options: ["*", "&", "#", "%"],
+  correct: 1
 },
 {
-  question: "Which loop is guaranteed to execute at least once?",
+  question: "Which loop executes at least once?",
   options: ["for", "while", "do-while", "foreach"],
   correct: 2
 },
 {
-  question: "Which operator is used to access value at an address?",
-  options: ["&", "*", "#", "%"],
-  correct: 1
-},
-{
-  question: "What is the correct way to declare a pointer?",
-  options: ["int p;", "int *p;", "pointer p;", "int &p;"],
-  correct: 1
-},
-{
-  question: "Which function is used to dynamically allocate memory?",
+  question: "Which function is used to allocate memory dynamically?",
   options: ["alloc()", "malloc()", "memory()", "new()"],
   correct: 1
 },
+{
+  question: "What does sizeof return?",
+  options: ["Value", "Address", "Size in bytes", "Data type"],
+  correct: 2
+},
+{
+  question: "Which keyword is used to exit a loop?",
+  options: ["exit", "stop", "break", "return"],
+  correct: 2
+},
 
 /* =========================
-   WEB DEVELOPMENT (HTML)
+   HTML
 ========================= */
 
 {
@@ -91,18 +91,18 @@ const allquestions = [
   correct: 1
 },
 {
-  question: "Which attribute is used to open a link in a new tab?",
-  options: ["new", "open", "target", "href"],
+  question: "Which attribute opens a link in a new tab?",
+  options: ["open", "href", "target", "blank"],
   correct: 2
 },
 {
-  question: "Which HTML tag is used to insert an image?",
-  options: ["<img>", "<image>", "<pic>", "<src>"],
-  correct: 0
+  question: "Which tag is used to display an image?",
+  options: ["<image>", "<img>", "<pic>", "<src>"],
+  correct: 1
 },
 {
-  question: "Which tag is used for the largest heading?",
-  options: ["<heading>", "<h6>", "<h1>", "<head>"],
+  question: "Which tag represents the largest heading?",
+  options: ["<h6>", "<h4>", "<h1>", "<head>"],
   correct: 2
 },
 
@@ -114,30 +114,30 @@ const allquestions = [
   question: "What does CSS stand for?",
   options: [
     "Creative Style Sheets",
-    "Computer Style Sheets",
     "Cascading Style Sheets",
-    "Colorful Style Sheets"
+    "Colorful Style Sheets",
+    "Computer Style Sheets"
   ],
-  correct: 2
+  correct: 1
 },
 {
-  question: "Which CSS property changes text color?",
+  question: "Which property changes text color?",
   options: ["font-color", "text-color", "color", "fgcolor"],
   correct: 2
 },
 {
   question: "Which symbol is used for class selector?",
-  options: [".", "#", "*", "&"],
-  correct: 0
-},
-{
-  question: "Which CSS property is used to change background color?",
-  options: ["bgcolor", "background-color", "color", "background"],
+  options: ["#", ".", "*", "&"],
   correct: 1
 },
 {
-  question: "Which unit is relative to screen size?",
-  options: ["px", "cm", "em", "vw"],
+  question: "Which CSS property sets background color?",
+  options: ["bgcolor", "color", "background-color", "background"],
+  correct: 2
+},
+{
+  question: "Which unit is relative to viewport width?",
+  options: ["px", "em", "%", "vw"],
   correct: 3
 },
 
@@ -152,11 +152,11 @@ const allquestions = [
 },
 {
   question: "Which symbol is used for single-line comments in JavaScript?",
-  options: ["<!-- -->", "#", "//", "/* */"],
-  correct: 2
+  options: ["<!-- -->", "//", "#", "/* */"],
+  correct: 1
 },
 {
-  question: "Which function prints output to the browser console?",
+  question: "Which function prints output to console?",
   options: ["print()", "log()", "console.log()", "write()"],
   correct: 2
 },
@@ -178,8 +178,10 @@ const allquestions = [
 
 ];
 
+
 /***********************
- * DOM ELEMENTS (🔥 FIX)
+
+ * DOM ELEMENTS
  ***********************/
 const startBtn = document.getElementById("startBtn");
 const nextBtn = document.getElementById("nextBtn");
@@ -191,12 +193,16 @@ const winnerScreen = document.getElementById("winnerScreen");
 const winnerText = document.getElementById("winnerText");
 
 /***********************
- * SOUNDS
+ * SOUNDS (SAFE)
  ***********************/
-
+const sndStart = document.getElementById("sndStart");
 const sndTick  = document.getElementById("sndTick");
 const sndWin   = document.getElementById("sndWin");
 const sndLose  = document.getElementById("sndLose");
+
+function playSound(snd) {
+  if (snd) snd.play().catch(() => {});
+}
 
 /***********************
  * GLOBALS
@@ -222,6 +228,7 @@ function hardReset() {
   confettiPlayed = false;
 
   timerEl.textContent = "--";
+  timerEl.classList.remove("timer-danger");
 
   db.ref("quiz").set({
     state: "IDLE",
@@ -241,7 +248,12 @@ hardReset();
  * QUIZ CONTROLS
  ***********************/
 function startQuiz() {
+  if (typeof allquestions === "undefined") {
+    alert("Questions not loaded!");
+    return;
+  }
 
+  playSound(sndStart);
 
   index = 0;
   questions = [...allquestions].sort(() => Math.random() - 0.5);
@@ -286,8 +298,8 @@ function loadQuestion() {
   timeLeft = 20;
   roundId++;
 
-  timerEl.classList.remove("timer-danger");
   timerEl.textContent = "--";
+  timerEl.classList.remove("timer-danger");
 
   db.ref("quiz").update({
     state: "BETTING",
@@ -302,10 +314,10 @@ function loadQuestion() {
 }
 
 /***********************
- * START TIMER (SAFE)
+ * START TIMER (ONLY ONCE)
  ***********************/
 function startTimer() {
-  if (timerStarted) return; // 🔒 prevent double start
+  if (timerStarted) return;
   timerStarted = true;
 
   db.ref("quiz/state").set("RUNNING");
@@ -316,7 +328,7 @@ function startTimer() {
     db.ref("quiz/time").set(timeLeft);
 
     if (timeLeft <= 5 && timeLeft > 0) {
-      sndTick.play();
+      playSound(sndTick);
       timerEl.classList.add("timer-danger");
     }
 
@@ -338,7 +350,7 @@ db.ref("quiz").on("value", snap => {
   const d = snap.val();
   if (!d) return;
 
-  // Scores + flash
+  // Scores
   scoreAEl.textContent = d.teamA.score;
   scoreBEl.textContent = d.teamB.score;
 
@@ -346,20 +358,25 @@ db.ref("quiz").on("value", snap => {
     flashScore(scoreAEl, d.teamA.score > lastScoreA);
     lastScoreA = d.teamA.score;
   }
+
   if (d.teamB.score !== lastScoreB) {
     flashScore(scoreBEl, d.teamB.score > lastScoreB);
     lastScoreB = d.teamB.score;
   }
 
-  // Enable next + start timer when BOTH bets done
+  // ✅ Start timer when both bets placed
   if (
     d.state === "BETTING" &&
     d.teamA.betRound === d.roundId &&
     d.teamB.betRound === d.roundId
   ) {
+    startTimer();
+  }
+
+  // ✅ Enable NEXT button only after round is LOCKED
+  if (d.state === "LOCKED") {
     nextBtn.disabled = false;
     nextBtn.classList.remove("disabled-btn");
-    startTimer();
   } else {
     nextBtn.disabled = true;
     nextBtn.classList.add("disabled-btn");
@@ -367,13 +384,35 @@ db.ref("quiz").on("value", snap => {
 });
 
 /***********************
- * SCORE FLASH + SOUND
+ * SCORE FLASH
  ***********************/
 function flashScore(el, win) {
   el.classList.remove("flash-green", "flash-red");
   void el.offsetWidth;
   el.classList.add(win ? "flash-green" : "flash-red");
-  win ? sndWin.play() : sndLose.play();
+  playSound(win ? sndWin : sndLose);
+}
+
+/***********************
+ * EVALUATE (SCORING)
+ ***********************/
+function evaluate() {
+  db.ref("quiz").once("value", snap => {
+    const d = snap.val();
+    if (!d || !d.question) return;
+
+    const correct = d.question.correct;
+
+    if (d.teamA.answer !== null && d.teamA.answer === correct) {
+      const rewardA = Math.floor(d.teamA.bet * 1.10);
+      db.ref("quiz/teamA/score").set(d.teamA.score + rewardA);
+    }
+
+    if (d.teamB.answer !== null && d.teamB.answer === correct) {
+      const rewardB = Math.floor(d.teamB.bet * 1.10);
+      db.ref("quiz/teamB/score").set(d.teamB.score + rewardB);
+    }
+  });
 }
 
 /***********************
@@ -397,6 +436,7 @@ function launchConfetti() {
 function finishQuiz() {
   db.ref("quiz").once("value", snap => {
     const d = snap.val();
+    if (!d) return;
 
     let text = "🏆 DRAW!";
     if (d.teamA.score > d.teamB.score) text = "🏆 TEAM A WINS!";
@@ -418,11 +458,9 @@ function finishQuiz() {
 }
 
 /***********************
- * EXPORTS (🔥 REQUIRED)
+ * EXPORTS (IMPORTANT)
  ***********************/
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz;
 window.toggleFullscreen = toggleFullscreen;
-
-
