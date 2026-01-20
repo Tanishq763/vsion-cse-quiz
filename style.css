@@ -300,3 +300,15 @@ input:disabled {
     opacity: 0.5;
 }
 
+.correct {
+  background: #16a34a !important;
+  box-shadow: 0 0 18px rgba(22, 163, 74, 0.85);
+  color: white;
+}
+
+.wrong {
+  background: #dc2626 !important;
+  box-shadow: 0 0 18px rgba(220, 38, 38, 0.85);
+  color: white;
+}
+
