@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Host | Vision CSE Quiz</title>
 
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -16,7 +17,7 @@
 
   <h1>🎤 HOST PANEL</h1>
 
-  <div class="footer" style="justify-content:center; gap:12px;">
+  <div class="footer" style="justify-content:center; gap:12px; flex-wrap:wrap;">
     <button id="startBtn" class="start-btn" onclick="startQuiz()">Start Quiz</button>
     <button id="nextBtn" class="start-btn hidden disabled-btn" disabled onclick="nextQuestion()">Next Question</button>
     <button id="restartBtn" class="start-btn hidden" onclick="restartQuiz()">Restart Quiz</button>
