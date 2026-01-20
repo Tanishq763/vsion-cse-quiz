@@ -1,36 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Team | Vision CSE Quiz</title>
+  <title>Vision Quiz – Team</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
+  <h1 id="teamTitle"></h1>
+  <p>Score: <b id="myScore">0</b></p>
 
-  <h1 id="teamTitle">TEAM</h1>
-  <p>Your Points: <b id="myScore">2000</b></p>
+  <h2 id="question">Waiting…</h2>
 
-  <h2 id="question">Waiting for host…</h2>
-
-  <label>Enter Bet</label>
-  <input type="number" id="betInput">
+  <input type="number" id="betInput" placeholder="Enter Bet">
 
   <div id="options" class="options"></div>
 
-  <div class="footer">
-    <span id="timer">⏱ --</span>
-  </div>
-
+  <div id="timer">⏱ --</div>
 </div>
 
 <script src="team.js"></script>
 </body>
 </html>
-
