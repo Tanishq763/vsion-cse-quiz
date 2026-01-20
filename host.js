@@ -5,105 +5,101 @@ const firebaseConfig = {
   apiKey: "AIzaSyDREhmA6fyafxw8dJqh30B5pjfdEAjf3no",
   authDomain: "vision-cse-quiz.firebaseapp.com",
   databaseURL: "https://vision-cse-quiz-default-rtdb.firebaseio.com",
-  projectId: "vision-cse-quiz",
-  storageBucket: "vision-cse-quiz.firebasestorage.app",
-  messagingSenderId: "1012496127258",
-  appId: "1:1012496127258:web:345bf07712c4b90fbdc8a3"
+  projectId: "vision-cse-quiz"
 };
 
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 /***********************
- * QUESTIONS
+ * QUESTIONS (CATEGORY + DIFFICULTY READY)
  ***********************/
 const allquestions = [
-  { question:"Which symbol ends a C statement?", options:[":",".",";","?"], correct:2 },
-  { question:"HTML hyperlink tag?", options:["<a>","<link>","<url>","<href>"], correct:0 },
-  { question:"CSS stands for?", options:["Creative","Cascading","Color","Coding"], correct:1 },
-  { question:"JS single-line comment?", options:["#","//","<!--","**"], correct:1 },
-  { question:"Which is NOT a C data type?", options:["int","float","char","string"], correct:3 }
+  { q:"Which symbol ends a C statement?", o:[":",".",";","?"], a:2, cat:"C", diff:1 },
+  { q:"HTML tag for link?", o:["<a>","<link>","<url>","<href>"], a:0, cat:"WEB", diff:1 },
+  { q:"CSS stands for?", o:["Creative","Cascading","Color","Coding"], a:1, cat:"WEB", diff:1 },
+  { q:"JS comment?", o:["#","//","<!--","**"], a:1, cat:"WEB", diff:1 },
+  { q:"Not a C data type?", o:["int","float","char","string"], a:3, cat:"C", diff:2 }
 ];
 
 /***********************
- * DOM ELEMENTS
+ * DOM
  ***********************/
-const startBtn = document.getElementById("startBtn");
-const nextBtn = document.getElementById("nextBtn");
-const restartBtn = document.getElementById("restartBtn");
 const timerEl = document.getElementById("timer");
 const scoreAEl = document.getElementById("scoreA");
 const scoreBEl = document.getElementById("scoreB");
-const winnerScreen = document.getElementById("winnerScreen");
+const betAEl = document.getElementById("betA");
+const betBEl = document.getElementById("betB");
+const ansAEl = document.getElementById("ansA");
+const ansBEl = document.getElementById("ansB");
+const nextBtn = document.getElementById("nextBtn");
 const winnerText = document.getElementById("winnerText");
+const winnerScreen = document.getElementById("winnerScreen");
 
 /***********************
- * GLOBAL STATE
+ * STATE
  ***********************/
-let index = -1;
+let shuffled = [];
+let idx = -1;
 let timer = null;
 let timeLeft = 20;
 let roundId = 0;
 
 /***********************
- * HARD RESET (FIRST LOAD ONLY)
+ * UTILS
  ***********************/
-function hardReset() {
-  clearInterval(timer);
-  timer = null;
-
-  db.ref("quiz").set({
-    state: "IDLE",
-    roundId: 0,
-    time: "--",
-    question: null,
-    winnerText: "",
-    teamA: { score: 2000, bet: null, answer: null },
-    teamB: { score: 2000, bet: null, answer: null }
-  });
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
-hardReset();
 
 /***********************
- * START QUIZ
+ * INIT
+ ***********************/
+db.ref("quiz").once("value", s => {
+  if (!s.exists()) {
+    db.ref("quiz").set({
+      state: "IDLE",
+      roundId: 0,
+      time: "--",
+      question: null,
+      teamA: { score:2000, bet:null, answer:null },
+      teamB: { score:2000, bet:null, answer:null }
+    });
+  }
+});
+
+/***********************
+ * GAME CONTROL
  ***********************/
 function startQuiz() {
-  index = 0;
+  shuffled = shuffle(allquestions);
+  idx = 0;
   loadQuestion();
-
-  startBtn.classList.add("hidden");
-  nextBtn.classList.remove("hidden");
-  restartBtn.classList.remove("hidden");
 }
 
-/***********************
- * LOAD QUESTION (⚠️ SCORE SAFE)
- ***********************/
 function loadQuestion() {
   clearInterval(timer);
   timeLeft = 20;
   roundId++;
 
-  // ✅ UPDATE ONLY – DO NOT TOUCH SCORE
   db.ref("quiz").update({
-    state: "RUNNING",
+    state:"RUNNING",
     roundId,
-    time: timeLeft,
-    question: allquestions[index]
+    time:timeLeft,
+    question:{
+      text:shuffled[idx].q,
+      options:shuffled[idx].o,
+      correct:shuffled[idx].a
+    }
   });
 
-  // reset per-round values only
-  db.ref("quiz/teamA").update({ bet: null, answer: null });
-  db.ref("quiz/teamB").update({ bet: null, answer: null });
-
-  startTimer();
-}
-
-/***********************
- * TIMER (STARTS IMMEDIATELY)
- ***********************/
-function startTimer() {
-  timerEl.textContent = timeLeft;
+  db.ref("quiz/teamA").update({ bet:null, answer:null });
+  db.ref("quiz/teamB").update({ bet:null, answer:null });
 
   timer = setInterval(() => {
     timeLeft--;
@@ -112,108 +108,92 @@ function startTimer() {
 
     if (timeLeft <= 0) {
       clearInterval(timer);
-      timer = null;
       db.ref("quiz/state").set("LOCKED");
       evaluate();
     }
-  }, 1000);
+  },1000);
 }
 
-/***********************
- * EVALUATE (FINAL SCORING LOGIC)
- ***********************/
 function evaluate() {
-  db.ref("quiz").once("value", snap => {
-    const d = snap.val();
-    if (!d || !d.question) return;
-
-    const correct = d.question.correct;
-
-    // TEAM A
-    let scoreA = d.teamA.score;
-    if (d.teamA.answer === null) {
-      scoreA -= Math.floor(scoreA * 0.20);
-    } else if (d.teamA.answer === correct) {
-      scoreA += Math.floor(d.teamA.bet * 1.10);
-    } else {
-      scoreA -= d.teamA.bet;
-    }
-
-    // TEAM B
-    let scoreB = d.teamB.score;
-    if (d.teamB.answer === null) {
-      scoreB -= Math.floor(scoreB * 0.20);
-    } else if (d.teamB.answer === correct) {
-      scoreB += Math.floor(d.teamB.bet * 1.10);
-    } else {
-      scoreB -= d.teamB.bet;
-    }
-
-    db.ref("quiz/teamA/score").set(scoreA);
-    db.ref("quiz/teamB/score").set(scoreB);
+  db.ref("quiz").once("value", s => {
+    const d = s.val();
+    applyScore("A", d.teamA, d.question.correct);
+    applyScore("B", d.teamB, d.question.correct);
   });
 }
-/**
- * NEXT QUESTION
- ***********************/
+
+function applyScore(t, data, correct) {
+  let score = data.score;
+  if (data.answer === null) score -= Math.floor(score * 0.2);
+  else if (data.answer === correct) score += Math.floor(data.bet * 1.1);
+  else score -= data.bet;
+  if (score < 0) score = 0;
+  db.ref(`quiz/team${t}/score`).set(score);
+}
+
 function nextQuestion() {
-  index++;
-  if (index >= allquestions.length) {
-    finishQuiz();
+  idx++;
+  if (idx >= shuffled.length) {
+    finish();
     return;
   }
   loadQuestion();
 }
 
-
-/***********************
- * FINISH QUIZ
- ***********************/
-function finishQuiz() {
-  db.ref("quiz").once("value", snap => {
-    const d = snap.val();
-    let text = "🏆 DRAW!";
-    if (d.teamA.score > d.teamB.score) text = "🏆 TEAM A WINS!";
-    if (d.teamB.score > d.teamA.score) text = "🏆 TEAM B WINS!";
-
-    db.ref("quiz").update({
-      state: "FINISHED",
-      winnerText: text
-    });
-
-    winnerText.textContent = text;
+function finish() {
+  db.ref("quiz").once("value", s => {
+    const d = s.val();
+    let t="🏆 DRAW";
+    if (d.teamA.score>d.teamB.score) t="🏆 TEAM A WINS!";
+    if (d.teamB.score>d.teamA.score) t="🏆 TEAM B WINS!";
+    winnerText.textContent=t;
     winnerScreen.classList.remove("hidden");
+    confetti();
   });
 }
 
-/***********************
- * RESTART QUIZ (RELOAD ALL)
- ***********************/
 function restartQuiz() {
-  db.ref("quiz").remove().then(() => {
-    location.reload();
-  });
+  db.ref("quiz").remove().then(()=>location.reload());
+}
+
+function addTime(x) {
+  timeLeft += x;
+  if (timeLeft < 1) timeLeft = 1;
+  db.ref("quiz/time").set(timeLeft);
 }
 
 /***********************
- * FIREBASE LISTENER
+ * LIVE MONITOR
  ***********************/
-db.ref("quiz").on("value", snap => {
-  const d = snap.val();
-  if (!d) return;
-
-  scoreAEl.textContent = d.teamA.score;
-  scoreBEl.textContent = d.teamB.score;
-
-  // enable NEXT only after round ends
-  nextBtn.disabled = d.state !== "LOCKED";
+db.ref("quiz").on("value", s => {
+  const d=s.val(); if(!d) return;
+  scoreAEl.textContent=d.teamA.score;
+  scoreBEl.textContent=d.teamB.score;
+  betAEl.textContent=d.teamA.bet ?? "--";
+  betBEl.textContent=d.teamB.bet ?? "--";
+  ansAEl.textContent=d.teamA.answer!==null?"✅":"❌";
+  ansBEl.textContent=d.teamB.answer!==null?"✅":"❌";
+  nextBtn.disabled=d.state!=="LOCKED";
 });
 
 /***********************
- * EXPORTS
+ * FX
  ***********************/
-window.startQuiz = startQuiz;
-window.nextQuestion = nextQuestion;
-window.restartQuiz = restartQuiz;
+function confetti() {
+  for(let i=0;i<120;i++){
+    const c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*100+"vw";
+    c.style.backgroundColor=["#00f0ff","#ffd166","#00ff99","#ff4d4d"][i%4];
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),3000);
+  }
+}
 
-
+/***********************
+ * EXPORT
+ ***********************/
+window.startQuiz=startQuiz;
+window.nextQuestion=nextQuestion;
+window.restartQuiz=restartQuiz;
+window.addTime=addTime;
