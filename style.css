@@ -273,3 +273,21 @@ input:focus {
     width: 92%;
   }
 }
+
+/* CONFETTI */
+.confetti {
+  position: fixed;
+  top: -10px;
+  width: 10px;
+  height: 18px;
+  opacity: 0.9;
+  z-index: 9999;
+  animation: confettiFall 3s linear forwards;
+}
+
+@keyframes confettiFall {
+  to {
+    transform: translateY(110vh) rotate(720deg);
+  }
+}
+
