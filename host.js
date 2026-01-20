@@ -122,6 +122,37 @@ function startTimer() {
 /***********************
  * EVALUATE (FINAL SCORING LOGIC)
  ***********************/
+function evaluate() {
+  db.ref("quiz").once("value", snap => {
+    const d = snap.val();
+    if (!d || !d.question) return;
+
+    const correct = d.question.correct;
+
+    // TEAM A
+    let scoreA = d.teamA.score;
+    if (d.teamA.answer === null) {
+      scoreA -= Math.floor(scoreA * 0.20);
+    } else if (d.teamA.answer === correct) {
+      scoreA += Math.floor(d.teamA.bet * 1.10);
+    } else {
+      scoreA -= d.teamA.bet;
+    }
+
+    // TEAM B
+    let scoreB = d.teamB.score;
+    if (d.teamB.answer === null) {
+      scoreB -= Math.floor(scoreB * 0.20);
+    } else if (d.teamB.answer === correct) {
+      scoreB += Math.floor(d.teamB.bet * 1.10);
+    } else {
+      scoreB -= d.teamB.bet;
+    }
+
+    db.ref("quiz/teamA/score").set(scoreA);
+    db.ref("quiz/teamB/score").set(scoreB);
+  });
+}
 /**
  * NEXT QUESTION
  ***********************/
@@ -133,42 +164,7 @@ function nextQuestion() {
   }
   loadQuestion();
 }
-function evaluate() {
-  db.ref("quiz").once("value", snap => {
-    const d = snap.val();
-    if (!d || !d.question) return;
 
-    const correct = d.question.correct;
-
-    /* ========= TEAM A ========= */
-    if (d.teamA.answer === null) {
-      // ❌ No answer → 20% penalty
-      const penaltyA = Math.floor(d.teamA.score * 0.20);
-      db.ref("quiz/teamA/score").set(d.teamA.score - penaltyA);
-    } else if (d.teamA.answer === correct) {
-      // ✅ Correct → bet + 10%
-      const rewardA = Math.floor(d.teamA.bet * 0.10);
-      db.ref("quiz/teamA/score").set(d.teamA.score + rewardA);
-    } else {
-      // ❌ Wrong → lose bet
-      db.ref("quiz/teamA/score").set(d.teamA.score - d.teamA.bet);
-    }
-
-    /* ========= TEAM B ========= */
-    if (d.teamB.answer === null) {
-      // ❌ No answer → 20% penalty
-      const penaltyB = Math.floor(d.teamB.score * 0.20);
-      db.ref("quiz/teamB/score").set(d.teamB.score - penaltyB);
-    } else if (d.teamB.answer === correct) {
-      // ✅ Correct → bet + 10%
-      const rewardB = Math.floor(d.teamB.bet * 0.10);
-      db.ref("quiz/teamB/score").set(d.teamB.score + rewardB);
-    } else {
-      // ❌ Wrong → lose bet
-      db.ref("quiz/teamB/score").set(d.teamB.score - d.teamB.bet);
-    }
-  });
-}
 
 /***********************
  * FINISH QUIZ
@@ -219,4 +215,5 @@ db.ref("quiz").on("value", snap => {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz;
+
 
