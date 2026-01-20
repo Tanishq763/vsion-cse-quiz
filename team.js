@@ -11,7 +11,6 @@ const firebaseConfig = {
   appId: "1:1012496127258:web:345bf07712c4b90fbdc8a3"
 };
 
-// 🔥 Prevent double initialization
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -36,8 +35,6 @@ const optionsEl = document.getElementById("options");
 const timerEl = document.getElementById("timer");
 const betInput = document.getElementById("betInput");
 const myScoreEl = document.getElementById("myScore");
-const resultBox = document.getElementById("resultBox");
-const resultText = document.getElementById("resultText");
 
 /***********************
  * LOCAL STATE
@@ -52,48 +49,54 @@ db.ref("quiz").on("value", snap => {
   const data = snap.val();
   if (!data) return;
 
-  const teamData = data[`team${team}`];
+  const myData = data[`team${team}`];
 
-  // Always update score
-  myScore = teamData?.score ?? 0;
+  /* ----- SCORE ----- */
+  myScore = myData?.score ?? 0;
   myScoreEl.textContent = myScore;
 
-  /* ---------- IDLE ---------- */
+  /* ----- IDLE ----- */
   if (data.state === "IDLE") {
     questionEl.textContent = "Waiting for host to start quiz…";
     optionsEl.innerHTML = "";
     timerEl.textContent = "⏱ --";
     betInput.disabled = true;
-    resultBox.classList.add("hidden");
+    timerEl.classList.remove("timer-danger");
     return;
   }
 
-  /* ---------- FINISHED ---------- */
+  /* ----- FINISHED ----- */
   if (data.state === "FINISHED") {
     questionEl.textContent = "Quiz Finished";
     optionsEl.innerHTML = "";
     timerEl.textContent = "⏱ --";
     betInput.disabled = true;
-
-    resultBox.classList.remove("hidden");
-    resultText.textContent = data.winnerText ?? "";
+    timerEl.classList.remove("timer-danger");
     return;
   }
 
-  /* ---------- BETTING / RUNNING ---------- */
-  if (!data.question) return;
+  /* ----- QUESTION ----- */
+  if (data.question) {
+    questionEl.textContent = data.question.question;
+  }
 
-  questionEl.textContent = data.question.question;
+  /* ----- TIMER ----- */
   timerEl.textContent = `⏱ ${data.time ?? "--"}`;
 
-  // New round detected
-  if (data.roundId !== lastRoundId) {
+  if (typeof data.time === "number" && data.time <= 5 && data.time > 0) {
+    timerEl.classList.add("timer-danger");
+  } else {
+    timerEl.classList.remove("timer-danger");
+  }
+
+  /* ----- NEW ROUND ----- */
+  if (data.roundId !== lastRoundId && data.question) {
     lastRoundId = data.roundId;
     renderOptions(data.question.options);
     betInput.value = "";
   }
 
-  // Bet input enabled ONLY during BETTING
+  /* ----- BET INPUT ENABLE ----- */
   betInput.disabled = data.state !== "BETTING";
 });
 
@@ -121,9 +124,9 @@ function renderOptions(options) {
 }
 
 /***********************
- * BET INPUT (🔥 FIXED)
+ * BET INPUT (SAFE + ATOMIC)
  ***********************/
-betInput.addEventListener("change", async () => {
+betInput.addEventListener("change", () => {
   const bet = parseInt(betInput.value);
 
   if (isNaN(bet) || bet <= 0) {
@@ -131,14 +134,12 @@ betInput.addEventListener("change", async () => {
     return;
   }
 
-  // ❌ prevent over-betting
   if (bet > myScore) {
     alert("Not enough points");
     betInput.value = "";
     return;
   }
 
-  // 🔥 atomic transaction (safe deduction)
   const teamRef = db.ref(`quiz/team${team}`);
 
   teamRef.transaction(curr => {
@@ -147,11 +148,12 @@ betInput.addEventListener("change", async () => {
     // ❌ already bet this round
     if (curr.betRound === lastRoundId) return;
 
+    // ❌ safety check
     if (bet > curr.score) return;
 
     return {
       ...curr,
-      score: curr.score - bet,   // 🔥 deduct immediately
+      score: curr.score - bet, // 🔥 deduct immediately
       bet: bet,
       betRound: lastRoundId
     };
