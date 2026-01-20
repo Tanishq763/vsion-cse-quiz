@@ -12,14 +12,16 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 /***********************
- * QUESTIONS (CATEGORY + DIFFICULTY READY)
+ * QUESTIONS
  ***********************/
 const allquestions = [
-  { q:"Which symbol ends a C statement?", o:[":",".",";","?"], a:2, cat:"C", diff:1 },
-  { q:"HTML tag for link?", o:["<a>","<link>","<url>","<href>"], a:0, cat:"WEB", diff:1 },
-  { q:"CSS stands for?", o:["Creative","Cascading","Color","Coding"], a:1, cat:"WEB", diff:1 },
-  { q:"JS comment?", o:["#","//","<!--","**"], a:1, cat:"WEB", diff:1 },
-  { q:"Not a C data type?", o:["int","float","char","string"], a:3, cat:"C", diff:2 }
+  { q:"Which symbol ends a C statement?", o:[":",".",";","?"], a:2 },
+  { q:"HTML tag for link?", o:["<a>","<link>","<url>","<href>"], a:0 },
+  { q:"CSS stands for?", o:["Creative","Cascading","Color","Coding"], a:1 },
+  { q:"JS single-line comment?", o:["#","//","<!--","**"], a:1 },
+  { q:"Which is NOT a C datatype?", o:["int","float","char","string"], a:3 },
+  { q:"Which tag is used for JavaScript?", o:["<js>","<javascript>","<script>","<code>"], a:2 },
+  { q:"Which loop runs at least once?", o:["for","while","do-while","foreach"], a:2 }
 ];
 
 /***********************
@@ -28,13 +30,10 @@ const allquestions = [
 const timerEl = document.getElementById("timer");
 const scoreAEl = document.getElementById("scoreA");
 const scoreBEl = document.getElementById("scoreB");
-const betAEl = document.getElementById("betA");
-const betBEl = document.getElementById("betB");
-const ansAEl = document.getElementById("ansA");
-const ansBEl = document.getElementById("ansB");
+const startBtn = document.getElementById("startBtn");
 const nextBtn = document.getElementById("nextBtn");
-const winnerText = document.getElementById("winnerText");
 const winnerScreen = document.getElementById("winnerScreen");
+const winnerText = document.getElementById("winnerText");
 
 /***********************
  * STATE
@@ -43,63 +42,61 @@ let shuffled = [];
 let idx = -1;
 let timer = null;
 let timeLeft = 20;
-let roundId = 0;
 
 /***********************
- * UTILS
+ * INIT RESET
  ***********************/
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-/***********************
- * INIT
- ***********************/
-db.ref("quiz").once("value", s => {
-  if (!s.exists()) {
-    db.ref("quiz").set({
-      state: "IDLE",
-      roundId: 0,
-      time: "--",
-      question: null,
-      teamA: { score:2000, bet:null, answer:null },
-      teamB: { score:2000, bet:null, answer:null }
-    });
-  }
+db.ref("quiz").set({
+  state: "IDLE",
+  time: "--",
+  question: null,
+  teamA: { score: 2000, bet: null, answer: null },
+  teamB: { score: 2000, bet: null, answer: null }
 });
 
 /***********************
- * GAME CONTROL
+ * START QUIZ
  ***********************/
 function startQuiz() {
-  shuffled = shuffle(allquestions);
+  shuffled = [...allquestions]
+    .sort(() => Math.random() - 0.5)
+    .slice(0, 5);
+
   idx = 0;
   loadQuestion();
+
+  startBtn.classList.add("hidden");
+  nextBtn.classList.remove("hidden");
 }
 
+/***********************
+ * LOAD QUESTION
+ ***********************/
 function loadQuestion() {
   clearInterval(timer);
   timeLeft = 20;
-  roundId++;
 
   db.ref("quiz").update({
-    state:"RUNNING",
-    roundId,
-    time:timeLeft,
-    question:{
-      text:shuffled[idx].q,
-      options:shuffled[idx].o,
-      correct:shuffled[idx].a
+    state: "RUNNING",
+    time: timeLeft,
+    question: {
+      text: shuffled[idx].q,
+      options: shuffled[idx].o,
+      correct: shuffled[idx].a
     }
   });
 
-  db.ref("quiz/teamA").update({ bet:null, answer:null });
-  db.ref("quiz/teamB").update({ bet:null, answer:null });
+  db.ref("quiz/teamA").update({ bet: null, answer: null });
+  db.ref("quiz/teamB").update({ bet: null, answer: null });
+
+  startTimer();
+}
+
+/***********************
+ * TIMER
+ ***********************/
+function startTimer() {
+  timerEl.textContent = timeLeft;
 
   timer = setInterval(() => {
     timeLeft--;
@@ -111,89 +108,98 @@ function loadQuestion() {
       db.ref("quiz/state").set("LOCKED");
       evaluate();
     }
-  },1000);
+  }, 1000);
 }
 
+/***********************
+ * SCORE LOGIC
+ ***********************/
 function evaluate() {
-  db.ref("quiz").once("value", s => {
-    const d = s.val();
+  db.ref("quiz").once("value", snap => {
+    const d = snap.val();
     applyScore("A", d.teamA, d.question.correct);
     applyScore("B", d.teamB, d.question.correct);
   });
 }
 
-function applyScore(t, data, correct) {
+function applyScore(team, data, correct) {
   let score = data.score;
+
   if (data.answer === null) score -= Math.floor(score * 0.2);
   else if (data.answer === correct) score += Math.floor(data.bet * 1.1);
   else score -= data.bet;
+
   if (score < 0) score = 0;
-  db.ref(`quiz/team${t}/score`).set(score);
+  db.ref(`quiz/team${team}/score`).set(score);
 }
 
+/***********************
+ * NEXT QUESTION
+ ***********************/
 function nextQuestion() {
   idx++;
   if (idx >= shuffled.length) {
-    finish();
+    finishQuiz();
     return;
   }
   loadQuestion();
 }
 
-function finish() {
-  db.ref("quiz").once("value", s => {
-    const d = s.val();
-    let t="🏆 DRAW";
-    if (d.teamA.score>d.teamB.score) t="🏆 TEAM A WINS!";
-    if (d.teamB.score>d.teamA.score) t="🏆 TEAM B WINS!";
-    winnerText.textContent=t;
+/***********************
+ * FINISH QUIZ
+ ***********************/
+function finishQuiz() {
+  db.ref("quiz").once("value", snap => {
+    const d = snap.val();
+    let text = "🏆 DRAW!";
+    if (d.teamA.score > d.teamB.score) text = "🏆 TEAM A WINS!";
+    if (d.teamB.score > d.teamA.score) text = "🏆 TEAM B WINS!";
+
+    db.ref("quiz").update({ state: "FINISHED" });
+
+    winnerText.textContent = text;
     winnerScreen.classList.remove("hidden");
-    confetti();
+    launchConfetti();
   });
 }
 
-function restartQuiz() {
-  db.ref("quiz").remove().then(()=>location.reload());
-}
-
-function addTime(x) {
-  timeLeft += x;
-  if (timeLeft < 1) timeLeft = 1;
-  db.ref("quiz/time").set(timeLeft);
-}
-
 /***********************
- * LIVE MONITOR
+ * CONFETTI
  ***********************/
-db.ref("quiz").on("value", s => {
-  const d=s.val(); if(!d) return;
-  scoreAEl.textContent=d.teamA.score;
-  scoreBEl.textContent=d.teamB.score;
-  betAEl.textContent=d.teamA.bet ?? "--";
-  betBEl.textContent=d.teamB.bet ?? "--";
-  ansAEl.textContent=d.teamA.answer!==null?"✅":"❌";
-  ansBEl.textContent=d.teamB.answer!==null?"✅":"❌";
-  nextBtn.disabled=d.state!=="LOCKED";
-});
-
-/***********************
- * FX
- ***********************/
-function confetti() {
-  for(let i=0;i<120;i++){
-    const c=document.createElement("div");
-    c.className="confetti";
-    c.style.left=Math.random()*100+"vw";
-    c.style.backgroundColor=["#00f0ff","#ffd166","#00ff99","#ff4d4d"][i%4];
+function launchConfetti() {
+  const colors = ["#00f0ff","#ffd166","#00ff99","#ff4d4d"];
+  for (let i = 0; i < 120; i++) {
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.left = Math.random() * 100 + "vw";
+    c.style.backgroundColor = colors[i % colors.length];
     document.body.appendChild(c);
-    setTimeout(()=>c.remove(),3000);
+    setTimeout(() => c.remove(), 3000);
   }
 }
 
 /***********************
+ * RESTART
+ ***********************/
+function restartQuiz() {
+  location.reload();
+}
+
+/***********************
+ * LIVE UPDATE
+ ***********************/
+db.ref("quiz").on("value", snap => {
+  const d = snap.val();
+  if (!d) return;
+
+  scoreAEl.textContent = d.teamA.score;
+  scoreBEl.textContent = d.teamB.score;
+  nextBtn.disabled = d.state !== "LOCKED";
+});
+
+/***********************
  * EXPORT
  ***********************/
-window.startQuiz=startQuiz;
-window.nextQuestion=nextQuestion;
-window.restartQuiz=restartQuiz;
-window.addTime=addTime;
+window.startQuiz = startQuiz;
+window.nextQuestion = nextQuestion;
+window.restartQuiz = restartQuiz;
