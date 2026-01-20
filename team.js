@@ -159,3 +159,4 @@ betInput.addEventListener("change", () => {
     };
   });
 });
+
