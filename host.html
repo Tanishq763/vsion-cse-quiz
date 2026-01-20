@@ -18,10 +18,9 @@
 
   <div class="footer" style="justify-content:center; gap:12px;">
     <button id="startBtn" class="start-btn" onclick="startQuiz()">Start Quiz</button>
-    <button id="nextBtn" class="start-btn hidden disabled-btn" disabled onclick="nextQuestion()">
-      Next Question
-    </button>
+    <button id="nextBtn" class="start-btn hidden disabled-btn" disabled onclick="nextQuestion()">Next Question</button>
     <button id="restartBtn" class="start-btn hidden" onclick="restartQuiz()">Restart Quiz</button>
+    <button class="start-btn" onclick="toggleFullscreen()">🎥 Stage Mode</button>
   </div>
 
   <p style="text-align:center; margin-top:15px;">
@@ -32,12 +31,10 @@
     <div class="team">
       <h3>TEAM A</h3>
       <span id="scoreA">2000</span>
-      <p>Points</p>
     </div>
     <div class="team">
       <h3>TEAM B</h3>
       <span id="scoreB">2000</span>
-      <p>Points</p>
     </div>
   </div>
 
@@ -46,6 +43,12 @@
   </div>
 
 </div>
+
+<!-- 🔊 SOUND EFFECTS -->
+<audio id="sndStart" src="sounds/start.mp3"></audio>
+<audio id="sndTick" src="sounds/tick.mp3"></audio>
+<audio id="sndWin" src="sounds/win.mp3"></audio>
+<audio id="sndLose" src="sounds/lose.mp3"></audio>
 
 <script src="host.js"></script>
 </body>
