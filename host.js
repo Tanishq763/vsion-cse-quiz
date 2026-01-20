@@ -1,3 +1,6 @@
+/***********************
+ * FIREBASE SETUP
+ ***********************/
 const firebaseConfig = {
   apiKey: "AIzaSyDREhmA6fyafxw8dJqh30B5pjfdEAjf3no",
   authDomain: "vision-cse-quiz.firebaseapp.com",
@@ -11,17 +14,31 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+/***********************
+ * SOUNDS
+ ***********************/
+const sndStart = document.getElementById("sndStart");
+const sndTick  = document.getElementById("sndTick");
+const sndWin   = document.getElementById("sndWin");
+const sndLose  = document.getElementById("sndLose");
+
+/***********************
+ * GLOBALS
+ ***********************/
 let questions = [];
 let index = -1;
-let timer = null;
+let timerInterval = null;
 let timeLeft = 20;
 let roundId = 0;
 
 let lastScoreA = 2000;
 let lastScoreB = 2000;
 
+/***********************
+ * RESET
+ ***********************/
 function hardReset() {
-  clearInterval(timer);
+  clearInterval(timerInterval);
   db.ref("quiz").set({
     state: "IDLE",
     index: -1,
@@ -35,7 +52,11 @@ function hardReset() {
 }
 hardReset();
 
+/***********************
+ * QUIZ CONTROLS
+ ***********************/
 function startQuiz() {
+  sndStart.play();
   index = 0;
   questions = [...allquestions].sort(() => Math.random() - 0.5);
   loadQuestion();
@@ -58,8 +79,18 @@ function restartQuiz() {
   restartBtn.classList.add("hidden");
 }
 
+function toggleFullscreen() {
+  if (!document.fullscreenElement)
+    document.documentElement.requestFullscreen();
+  else
+    document.exitFullscreen();
+}
+
+/***********************
+ * LOAD QUESTION
+ ***********************/
 function loadQuestion() {
-  clearInterval(timer);
+  clearInterval(timerInterval);
   timeLeft = 20;
   roundId++;
 
@@ -75,6 +106,35 @@ function loadQuestion() {
   db.ref("quiz/teamB").update({ bet: null, betRound: -1, answer: null });
 }
 
+/***********************
+ * TIMER
+ ***********************/
+function startTimer() {
+  db.ref("quiz/state").set("RUNNING");
+  timer.classList.remove("timer-danger");
+
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    timer.textContent = timeLeft;
+    db.ref("quiz/time").set(timeLeft);
+
+    if (timeLeft <= 5 && timeLeft > 0) {
+      sndTick.play();
+      timer.classList.add("timer-danger");
+    }
+
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      timer.classList.remove("timer-danger");
+      db.ref("quiz/state").set("LOCKED");
+      evaluate();
+    }
+  }, 1000);
+}
+
+/***********************
+ * LISTENER
+ ***********************/
 db.ref("quiz").on("value", snap => {
   const d = snap.val();
   if (!d) return;
@@ -86,6 +146,7 @@ db.ref("quiz").on("value", snap => {
     flashScore(scoreA, d.teamA.score > lastScoreA);
     lastScoreA = d.teamA.score;
   }
+
   if (d.teamB.score !== lastScoreB) {
     flashScore(scoreB, d.teamB.score > lastScoreB);
     lastScoreB = d.teamB.score;
@@ -98,14 +159,20 @@ db.ref("quiz").on("value", snap => {
   ) {
     nextBtn.disabled = false;
     nextBtn.classList.remove("disabled-btn");
+    startTimer();
   } else {
     nextBtn.disabled = true;
     nextBtn.classList.add("disabled-btn");
   }
 });
 
+/***********************
+ * SCORE FLASH
+ ***********************/
 function flashScore(el, win) {
   el.classList.remove("flash-green", "flash-red");
   void el.offsetWidth;
   el.classList.add(win ? "flash-green" : "flash-red");
+
+  win ? sndWin.play() : sndLose.play();
 }
