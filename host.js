@@ -79,29 +79,15 @@ let timer;
 let timeLeft = 20;
 
 /***********************
- * RESET FUNCTION (USED ON LOAD AND RESTART)
+ * INIT RESET
  ***********************/
-function resetQuiz() {
-  clearInterval(timer);
-  db.ref("quiz").set({
-    state: "IDLE",
-    time: "--",
-    question: null,
-    teamA: { score: 2000, bet: null, answer: null },
-    teamB: { score: 2000, bet: null, answer: null }
-  });
-  // Reset local state
-  idx = -1;
-  shuffled = [];
-  timeLeft = 20;
-  // Reset UI
-  document.getElementById("startBtn").classList.remove("hidden");
-  document.getElementById("nextBtn").classList.add("hidden");
-  document.getElementById("winnerScreen").classList.add("hidden");
-}
-
-// Run reset on load
-resetQuiz();
+db.ref("quiz").set({
+  state: "IDLE",
+  time: "--",
+  question: null,
+  teamA: { score: 2000, bet: null, answer: null },
+  teamB: { score: 2000, bet: null, answer: null }
+});
 
 /***********************
  * START QUIZ
@@ -110,8 +96,6 @@ function startQuiz() {
   shuffled = [...allquestions].sort(() => Math.random() - 0.5);
   idx = 0;
   loadQuestion();
-  document.getElementById("startBtn").classList.add("hidden");
-  document.getElementById("nextBtn").classList.add("hidden"); // Hide until needed
 }
 
 /***********************
@@ -201,6 +185,7 @@ function checkImmediateGameOver() {
   });
 }
 
+
 /***********************
  * NEXT QUESTION
  ***********************/
@@ -211,57 +196,7 @@ function nextQuestion() {
     return;
   }
   loadQuestion();
-  document.getElementById("nextBtn").classList.add("hidden"); // Hide after clicking
 }
-
-/***********************
- * RESTART QUIZ (NEW FUNCTION)
- ***********************/
-function restartQuiz() {
-  resetQuiz();
-}
-
-/***********************
- * LIVE UI UPDATER (NEW: LISTEN FOR DB CHANGES)
- ***********************/
-db.ref("quiz").on("value", snap => {
-  const d = snap.val();
-  if (!d) return;
-
-  // Update timer
-  document.getElementById("timer").textContent = d.time;
-  if (d.time <= 5 && d.time > 0) {
-    document.getElementById("timer").classList.add("timer-danger");
-  } else {
-    document.getElementById("timer").classList.remove("timer-danger");
-  }
-
-  // Update scores
-  document.getElementById("scoreA").textContent = d.teamA ? d.teamA.score : 2000;
-  document.getElementById("scoreB").textContent = d.teamB ? d.teamB.score : 2000;
-
-  // Handle states and buttons
-  if (d.state === "IDLE") {
-    document.getElementById("startBtn").classList.remove("hidden");
-    document.getElementById("nextBtn").classList.add("hidden");
-    document.getElementById("winnerScreen").classList.add("hidden");
-  } else if (d.state === "RUNNING") {
-    document.getElementById("startBtn").classList.add("hidden");
-    document.getElementById("nextBtn").classList.add("hidden");
-  } else if (d.state === "LOCKED") {
-    document.getElementById("nextBtn").classList.remove("hidden"); // Show next after evaluation
-  } else if (d.state === "FINISHED") {
-    document.getElementById("startBtn").classList.add("hidden");
-    document.getElementById("nextBtn").classList.add("hidden");
-    document.getElementById("winnerScreen").classList.remove("hidden");
-    if (d.winner === "DRAW") {
-      document.getElementById("winnerText").textContent = "It's a DRAW!";
-    } else {
-      document.getElementById("winnerText").textContent = `Team ${d.winner} WINS!`;
-    }
-  }
-});
 
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
-window.restartQuiz = restartQuiz; // Expose the new function
