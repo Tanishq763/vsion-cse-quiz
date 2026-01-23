@@ -107,19 +107,12 @@ resetQuiz();
  * START QUIZ
  ***********************/
 function startQuiz() {
-  // Shuffle all questions
-  const temp = [...allquestions].sort(() => Math.random() - 0.5);
-
-  // Pick ONLY 10 questions for this quiz
-  shuffled = temp.slice(0, 10);
-
+  shuffled = [...allquestions].sort(() => Math.random() - 0.5);
   idx = 0;
   loadQuestion();
-
   document.getElementById("startBtn").classList.add("hidden");
-  document.getElementById("nextBtn").classList.add("hidden");
+  document.getElementById("nextBtn").classList.add("hidden"); // Hide until needed
 }
-
 
 /***********************
  * LOAD QUESTION
@@ -272,4 +265,3 @@ db.ref("quiz").on("value", snap => {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz; // Expose the new function
-
