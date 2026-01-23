@@ -1,3 +1,6 @@
+/***********************
+ * FIREBASE SETUP
+ ***********************/
 const firebaseConfig = {
   apiKey: "AIzaSyDREhmA6fyafxw8dJqh30B5pjfdEAjf3no",
   authDomain: "vision-cse-quiz.firebaseapp.com",
@@ -5,53 +8,123 @@ const firebaseConfig = {
   projectId: "vision-cse-quiz"
 };
 
-firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-/**************** QUESTIONS ****************/
+/***********************
+ * QUESTIONS
+ ***********************/
 const allquestions = [
-  { q:"C statement ends with?", o:[":",".",";","?"], a:2 },
-  { q:"Binary search complexity?", o:["O(n)","O(log n)","O(1)","O(n²)"], a:1 },
-  { q:"Fastest complexity?", o:["O(n)","O(log n)","O(n²)","O(n log n)"], a:1 }
+  { q:"Which symbol ends a C statement?", o:[":",".",";","?"], a:2 },
+  { q:"HTML tag for link?", o:["<a>","<link>","<url>","<href>"], a:0 },
+  { q:"CSS stands for?", o:["Creative","Cascading","Color","Coding"], a:1 },
+  { q:"JS single-line comment?", o:["#","//","<!--","**"], a:1 },
+  { q:"Which is NOT a C datatype?", o:["int","float","char","string"], a:3 },
+  { q: "Time complexity of binary search?", 
+    o: ["O(n)", "O(log n)", "O(n log n)", "O(1)"], 
+    a: 1 
+  },
+  { q: "Worst-case time complexity of linear search?", 
+    o: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], 
+    a: 2 
+  },
+  { q: "Time complexity of a loop running n times?", 
+    o: ["O(1)", "O(log n)", "O(n)", "O(n²)"], 
+    a: 2 
+  },
+  { q: "Time complexity of nested loops each running n times?", 
+    o: ["O(n)", "O(n log n)", "O(n²)", "O(log n)"], 
+    a: 2 
+  },
+  { q: "Best-case time complexity of binary search?", 
+    o: ["O(1)", "O(log n)", "O(n)", "O(n²)"], 
+    a: 0 
+  },
+  { q: "Time complexity of merge sort?", 
+    o: ["O(n²)", "O(n log n)", "O(log n)", "O(n)"], 
+    a: 1 
+  },
+  { q: "Worst-case time complexity of quicksort?", 
+    o: ["O(n log n)", "O(n)", "O(n²)", "O(log n)"], 
+    a: 2 
+  },
+  { q: "Time complexity of accessing an array element by index?", 
+    o: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], 
+    a: 2 
+  },
+  { q: "Time complexity of inserting an element at the end of an array (amortized)?", 
+    o: ["O(n)", "O(1)", "O(log n)", "O(n log n)"], 
+    a: 1 
+  },
+  { q: "Time complexity of DFS using adjacency list?", 
+    o: ["O(V)", "O(E)", "O(V + E)", "O(V²)"], 
+    a: 2 
+  },
+  { q: "Time complexity of BFS using queue?", 
+    o: ["O(V)", "O(E)", "O(V + E)", "O(V²)"], 
+    a: 2 
+  },
+  { q: "Which time complexity is the fastest?", 
+    o: ["O(n)", "O(log n)", "O(n log n)", "O(n²)"], 
+    a: 1 
+  }
 ];
 
-let pool = [];
-let timer, timeLeft = 20;
+/***********************
+ * STATE
+ ***********************/
+let idx = -1;
+let shuffled = [];
+let timer;
+let timeLeft = 20;
 
-/**************** RESET ****************/
+/***********************
+ * INIT RESET
+ ***********************/
 db.ref("quiz").set({
   state: "IDLE",
   time: "--",
-  winner: null,
   question: null,
   teamA: { score: 2000, bet: null, answer: null },
   teamB: { score: 2000, bet: null, answer: null }
 });
 
-/**************** START ****************/
+/***********************
+ * START QUIZ
+ ***********************/
 function startQuiz() {
-  pool = [...allquestions];
-  nextQuestion();
+  shuffled = [...allquestions].sort(() => Math.random() - 0.5);
+  idx = 0;
+  loadQuestion();
 }
 
-/**************** NEXT QUESTION ****************/
-function nextQuestion() {
-  if (pool.length === 0) return finishQuiz();
-
+/***********************
+ * LOAD QUESTION
+ ***********************/
+function loadQuestion() {
   clearInterval(timer);
   timeLeft = 20;
-
-  const q = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
 
   db.ref("quiz").update({
     state: "RUNNING",
     time: timeLeft,
-    question: { text: q.q, options: q.o, correct: q.a }
+    question: {
+      text: shuffled[idx].q,
+      options: shuffled[idx].o,
+      correct: shuffled[idx].a
+    }
   });
 
   db.ref("quiz/teamA").update({ bet: null, answer: null });
   db.ref("quiz/teamB").update({ bet: null, answer: null });
 
+  startTimer();
+}
+
+/***********************
+ * TIMER
+ ***********************/
+function startTimer() {
   timer = setInterval(() => {
     timeLeft--;
     db.ref("quiz/time").set(timeLeft);
@@ -59,73 +132,71 @@ function nextQuestion() {
     if (timeLeft <= 0) {
       clearInterval(timer);
       db.ref("quiz/state").set("LOCKED");
-      evaluate();
+      evaluateScores();
     }
   }, 1000);
 }
 
-/**************** SCORING ****************/
-function evaluate() {
-  db.ref("quiz").once("value").then(snap => {
+/***********************
+ * SCORING (HOST ONLY)
+ ***********************/
+function evaluateScores() {
+  db.ref("quiz").once("value", snap => {
     const d = snap.val();
-
-    return Promise.all([
-      score("A", d.teamA, d.question.correct),
-      score("B", d.teamB, d.question.correct)
-    ]);
-  }).then(checkWinner);
-}
-
-function score(t, data, correct) {
-  let s = data.score;
-  const b = data.bet || 0;
-
-  if (data.answer === null) s -= Math.floor(s * 0.2);
-  else if (data.answer === correct) s += b;
-  else s -= b;
-
-  if (s < 0) s = 0;
-  return db.ref(`quiz/team${t}/score`).set(s);
-}
-
-/**************** WINNER ****************/
-function checkWinner() {
-  db.ref("quiz").once("value").then(snap => {
-    const d = snap.val();
-    let w = null;
-
-    if (d.teamA.score <= 0 && d.teamB.score <= 0) w = "DRAW";
-    else if (d.teamA.score <= 0) w = "B";
-    else if (d.teamB.score <= 0) w = "A";
-
-    if (w) db.ref("quiz").update({ state: "FINISHED", winner: w });
+    scoreTeam("A", d.teamA, d.question.correct);
+    scoreTeam("B", d.teamB, d.question.correct);
+    checkImmediateGameOver();
   });
 }
 
-function finishQuiz() {
-  db.ref("quiz").once("value").then(snap => {
-    const d = snap.val();
-    let w = d.teamA.score > d.teamB.score ? "A" :
-            d.teamB.score > d.teamA.score ? "B" : "DRAW";
+function scoreTeam(team, data, correct) {
+  let score = data.score;
+  const bet = data.bet ?? 0;
 
-    db.ref("quiz").update({ state: "FINISHED", winner: w });
+  if (data.answer === null) score -= Math.floor(score * 0.2);
+  else if (data.answer === correct) score += bet;
+  else score -= bet;
+
+  if (score < 0) score = 0;
+  db.ref(`quiz/team${team}/score`).set(score);
+}
+
+function checkImmediateGameOver() {
+  db.ref("quiz").once("value", snap => {
+    const d = snap.val();
+    let winner = null;
+
+    if (d.teamA.score <= 0 && d.teamB.score <= 0) {
+      winner = "DRAW";
+    } 
+    else if (d.teamA.score <= 0) {
+      winner = "B";
+    } 
+    else if (d.teamB.score <= 0) {
+      winner = "A";
+    }
+
+    if (winner) {
+      db.ref("quiz").update({
+        state: "FINISHED",
+        winner: winner
+      });
+    }
   });
 }
 
-/**************** HOST UI ****************/
-db.ref("quiz").on("value", snap => {
-  const d = snap.val();
-  if (!d) return;
 
-  scoreA.textContent = d.teamA.score;
-  scoreB.textContent = d.teamB.score;
-  timer.textContent = "⏱ " + d.time;
-
-  if (d.state === "FINISHED" && d.winner) {
-    winnerScreen.classList.remove("hidden");
-    winnerText.textContent =
-      d.winner === "A" ? "🏆 TEAM A WINS" :
-      d.winner === "B" ? "🏆 TEAM B WINS" :
-      "🏆 DRAW";
+/***********************
+ * NEXT QUESTION
+ ***********************/
+function nextQuestion() {
+  idx++;
+  if (idx >= shuffled.length) {
+    db.ref("quiz/state").set("FINISHED");
+    return;
   }
-});
+  loadQuestion();
+}
+
+window.startQuiz = startQuiz;
+window.nextQuestion = nextQuestion;
