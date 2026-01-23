@@ -164,11 +164,27 @@ function scoreTeam(team, data, correct) {
 function checkImmediateGameOver() {
   db.ref("quiz").once("value", snap => {
     const d = snap.val();
-    if (d.teamA.score <= 0 || d.teamB.score <= 0) {
-      db.ref("quiz/state").set("FINISHED");
+    let winner = null;
+
+    if (d.teamA.score <= 0 && d.teamB.score <= 0) {
+      winner = "DRAW";
+    } 
+    else if (d.teamA.score <= 0) {
+      winner = "B";
+    } 
+    else if (d.teamB.score <= 0) {
+      winner = "A";
+    }
+
+    if (winner) {
+      db.ref("quiz").update({
+        state: "FINISHED",
+        winner: winner
+      });
     }
   });
 }
+
 
 /***********************
  * NEXT QUESTION
@@ -184,3 +200,4 @@ function nextQuestion() {
 
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
+
