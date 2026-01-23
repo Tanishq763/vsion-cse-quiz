@@ -17,8 +17,10 @@ const betEl = document.getElementById("betInput");
 const timerEl = document.getElementById("timer");
 const scoreEl = document.getElementById("myScore");
 
+// State tracking variables
 let lastQuestion = null;
-let currentScore = 0; // Global variable for betting validation
+let currentScore = 0;
+let hasScoredThisRound = false; // Prevents double-scoring
 
 db.ref("quiz").on("value", snap => {
   const d = snap.val();
@@ -26,73 +28,111 @@ db.ref("quiz").on("value", snap => {
 
   const myKey = "team" + team;
   const me = d[myKey];
-
-  // 1. ROBUST SCORE UPDATE
-  // We use parseInt to ensure it's treated as a number, defaulting to 0 if missing
+  
+  // 1. UPDATE LOCAL SCORE VARIABLE
   currentScore = parseInt(me.score !== undefined ? me.score : 0);
   scoreEl.textContent = currentScore;
-  
   timerEl.textContent = "⏱ " + d.time;
 
-  // 2. CHECK WIN/LOSS CONDITION IMMEDIATELY
-  // Find the opponent (any key starting with 'team' that isn't me)
+  // 2. CHECK FOR INSTANT WIN/LOSS (Priority #1)
   const opponentKey = Object.keys(d).find(k => k.startsWith('team') && k !== myKey);
   const opponent = d[opponentKey];
 
+  // Condition A: I have 0 (or less) -> I Lose
   if (currentScore <= 0) {
-    // I have 0 points -> I LOSE
-    handleGameOver("GAME OVER", "You have 0 points.", "wrong");
-    return; // Stop processing the rest of the script
-  } 
+    displayGameOver("ELIMINATED", "You ran out of points!", "wrong");
+    return;
+  }
   
+  // Condition B: Opponent has 0 (or less) -> I Win
   if (opponent && opponent.score <= 0) {
-    // Opponent has 0 points -> I WIN
-    handleGameOver("VICTORY!", "Opponent was eliminated.", "correct");
-    return; // Stop processing
+    displayGameOver("VICTORY!", `Team ${opponentKey.replace('team','')} was eliminated!`, "correct");
+    return;
   }
 
-  // --- Normal Game Loop ---
+  // --- GAME LOGIC ---
 
+  // Detect New Question -> Reset Scoring Flag
   if (d.question && d.question.text !== lastQuestion) {
     lastQuestion = d.question.text;
     qEl.textContent = d.question.text;
     
-    // Reset inputs for new question
+    // Reset for new round
     betEl.value = me.bet ?? "";
-    betEl.disabled = false; 
     renderOptions(d.question.options);
-  }
-
-  // Lock betting if state is not RUNNING
-  if (d.state !== "RUNNING") {
-    betEl.disabled = true;
-  } else {
+    hasScoredThisRound = false; 
+    
+    // Unlock betting
     betEl.disabled = false;
   }
 
-  // Highlight my selected answer
+  // Handle Betting State
+  if (d.state !== "RUNNING") {
+    betEl.disabled = true;
+  }
+
+  // Highlight Selection
   if (me.answer !== null && d.state === "RUNNING") {
     [...optEl.children].forEach((b, i) =>
       b.classList.toggle("selected", i === me.answer)
     );
   }
 
-  // Reveal answers
-  if (d.state === "LOCKED") reveal(me.answer, d.question.correct);
-  if (d.state === "FINISHED") qEl.textContent = "Quiz Finished!";
+  // 3. HANDLE ANSWER REVEAL & UPDATE SCORE
+  if (d.state === "LOCKED") {
+    reveal(me.answer, d.question.correct);
+
+    // Only run this logic ONCE per round (when we see the LOCKED state)
+    if (!hasScoredThisRound) {
+      calculateScore(me.answer, d.question.correct, me.bet);
+      hasScoredThisRound = true; // Mark as done so we don't update again
+    }
+  }
+
+  if (d.state === "FINISHED") {
+    qEl.textContent = "Quiz Finished!";
+  }
 });
 
-// Helper to stop the game and show status
-function handleGameOver(title, subtext, cssClass) {
+// --- NEW FUNCTION: Calculate & Update Score in Firebase ---
+function calculateScore(myAns, correctAns, myBet) {
+  let betAmount = parseInt(myBet);
+  if (isNaN(betAmount)) betAmount = 0;
+
+  // If answer is null (didn't answer), treat as wrong
+  const isCorrect = (myAns === correctAns);
+
+  let newScore = currentScore;
+
+  if (isCorrect) {
+    newScore = currentScore + betAmount;
+  } else {
+    // WRONG ANSWER: Deduct Bet
+    newScore = currentScore - betAmount;
+  }
+
+  // Prevent negative scores in database (optional, but cleaner)
+  if (newScore < 0) newScore = 0;
+
+  // UPDATE FIREBASE
+  // This sends the new score back to the database
+  db.ref(`quiz/team${team}/score`).set(newScore);
+}
+
+// --- VISUALS ---
+
+function displayGameOver(title, sub, cls) {
   qEl.textContent = title;
-  qEl.classList.add(cssClass); // Adds green or red glow
-  
-  // Create or update a subtext element
-  optEl.innerHTML = `<h3>${subtext}</h3>`;
-  
+  // Clear options and show message
+  optEl.innerHTML = `<div style="text-align:center; font-size: 1.2rem; color: #fff;">${sub}</div>`;
   betEl.disabled = true;
-  betEl.placeholder = "---";
-  timerEl.textContent = "⏱ STOP";
+  betEl.value = "";
+  timerEl.textContent = "---";
+  
+  // Apply visual style
+  document.body.className = ""; // Reset body bg
+  if(cls === "correct") document.body.style.background = "#064e3b"; // Dark Green
+  if(cls === "wrong") document.body.style.background = "#7f1d1d"; // Dark Red
 }
 
 function renderOptions(options) {
@@ -101,35 +141,27 @@ function renderOptions(options) {
     const btn = document.createElement("button");
     btn.textContent = opt;
     btn.dataset.index = i;
-
     btn.onclick = () => {
-      // Prevent answering if score is 0 (double check)
+      // Prevent clicking if game over
       if(currentScore <= 0) return;
-
+      
       [...optEl.children].forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
       db.ref(`quiz/team${team}/answer`).set(i);
     };
-
     optEl.appendChild(btn);
   });
 }
 
-// 3. BETTING LOGIC (Max 2000, Max Score)
+// Betting Logic (Max 2000, Max Score)
 betEl.oninput = () => {
   let val = parseInt(betEl.value);
+  if (isNaN(val) || val < 0) val = 0;
 
-  if (isNaN(val) || val < 0) {
-     val = 0;
-  }
-
-  // Limit to 2000
   if (val > 2000) {
     val = 2000;
     betEl.value = 2000;
   }
-
-  // Limit to available Score
   if (val > currentScore) {
     val = currentScore;
     betEl.value = currentScore;
