@@ -20,27 +20,62 @@ const allquestions = [
   { q:"CSS stands for?", o:["Creative","Cascading","Color","Coding"], a:1 },
   { q:"JS single-line comment?", o:["#","//","<!--","**"], a:1 },
   { q:"Which is NOT a C datatype?", o:["int","float","char","string"], a:3 },
-  { q:"Which tag is used for JavaScript?", o:["<js>","<javascript>","<script>","<code>"], a:2 },
-  { q:"Which loop runs at least once?", o:["for","while","do-while","foreach"], a:2 }
+  { q: "Time complexity of binary search?", 
+    o: ["O(n)", "O(log n)", "O(n log n)", "O(1)"], 
+    a: 1 
+  },
+  { q: "Worst-case time complexity of linear search?", 
+    o: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], 
+    a: 2 
+  },
+  { q: "Time complexity of a loop running n times?", 
+    o: ["O(1)", "O(log n)", "O(n)", "O(n²)"], 
+    a: 2 
+  },
+  { q: "Time complexity of nested loops each running n times?", 
+    o: ["O(n)", "O(n log n)", "O(n²)", "O(log n)"], 
+    a: 2 
+  },
+  { q: "Best-case time complexity of binary search?", 
+    o: ["O(1)", "O(log n)", "O(n)", "O(n²)"], 
+    a: 0 
+  },
+  { q: "Time complexity of merge sort?", 
+    o: ["O(n²)", "O(n log n)", "O(log n)", "O(n)"], 
+    a: 1 
+  },
+  { q: "Worst-case time complexity of quicksort?", 
+    o: ["O(n log n)", "O(n)", "O(n²)", "O(log n)"], 
+    a: 2 
+  },
+  { q: "Time complexity of accessing an array element by index?", 
+    o: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], 
+    a: 2 
+  },
+  { q: "Time complexity of inserting an element at the end of an array (amortized)?", 
+    o: ["O(n)", "O(1)", "O(log n)", "O(n log n)"], 
+    a: 1 
+  },
+  { q: "Time complexity of DFS using adjacency list?", 
+    o: ["O(V)", "O(E)", "O(V + E)", "O(V²)"], 
+    a: 2 
+  },
+  { q: "Time complexity of BFS using queue?", 
+    o: ["O(V)", "O(E)", "O(V + E)", "O(V²)"], 
+    a: 2 
+  },
+  { q: "Which time complexity is the fastest?", 
+    o: ["O(n)", "O(log n)", "O(n log n)", "O(n²)"], 
+    a: 1 
+  }
 ];
-
-/***********************
- * DOM
- ***********************/
-const timerEl = document.getElementById("timer");
-const scoreAEl = document.getElementById("scoreA");
-const scoreBEl = document.getElementById("scoreB");
-const startBtn = document.getElementById("startBtn");
-const nextBtn = document.getElementById("nextBtn");
-const winnerScreen = document.getElementById("winnerScreen");
-const winnerText = document.getElementById("winnerText");
 
 /***********************
  * STATE
  ***********************/
-let shuffled = [];
 let idx = -1;
-let timer = null;
+let shuffled = [];
+let timer;
 let timeLeft = 20;
 
 /***********************
@@ -58,15 +93,9 @@ db.ref("quiz").set({
  * START QUIZ
  ***********************/
 function startQuiz() {
-  shuffled = [...allquestions]
-    .sort(() => Math.random() - 0.5)
-    .slice(0, 5);
-
+  shuffled = [...allquestions].sort(() => Math.random() - 0.5);
   idx = 0;
   loadQuestion();
-
-  startBtn.classList.add("hidden");
-  nextBtn.classList.remove("hidden");
 }
 
 /***********************
@@ -96,41 +125,49 @@ function loadQuestion() {
  * TIMER
  ***********************/
 function startTimer() {
-  timerEl.textContent = timeLeft;
-
   timer = setInterval(() => {
     timeLeft--;
-    timerEl.textContent = timeLeft;
     db.ref("quiz/time").set(timeLeft);
 
     if (timeLeft <= 0) {
       clearInterval(timer);
       db.ref("quiz/state").set("LOCKED");
-      evaluate();
+      evaluateScores();
     }
   }, 1000);
 }
 
 /***********************
- * SCORE LOGIC
+ * SCORING (HOST ONLY)
  ***********************/
-function evaluate() {
+function evaluateScores() {
   db.ref("quiz").once("value", snap => {
     const d = snap.val();
-    applyScore("A", d.teamA, d.question.correct);
-    applyScore("B", d.teamB, d.question.correct);
+    scoreTeam("A", d.teamA, d.question.correct);
+    scoreTeam("B", d.teamB, d.question.correct);
+    checkImmediateGameOver();
   });
 }
 
-function applyScore(team, data, correct) {
+function scoreTeam(team, data, correct) {
   let score = data.score;
+  const bet = data.bet ?? 0;
 
   if (data.answer === null) score -= Math.floor(score * 0.2);
-  else if (data.answer === correct) score += Math.floor(data.bet * 1.1);
-  else score -= data.bet;
+  else if (data.answer === correct) score += bet;
+  else score -= bet;
 
   if (score < 0) score = 0;
   db.ref(`quiz/team${team}/score`).set(score);
+}
+
+function checkImmediateGameOver() {
+  db.ref("quiz").once("value", snap => {
+    const d = snap.val();
+    if (d.teamA.score <= 0 || d.teamB.score <= 0) {
+      db.ref("quiz/state").set("FINISHED");
+    }
+  });
 }
 
 /***********************
@@ -139,67 +176,11 @@ function applyScore(team, data, correct) {
 function nextQuestion() {
   idx++;
   if (idx >= shuffled.length) {
-    finishQuiz();
+    db.ref("quiz/state").set("FINISHED");
     return;
   }
   loadQuestion();
 }
 
-/***********************
- * FINISH QUIZ
- ***********************/
-function finishQuiz() {
-  db.ref("quiz").once("value", snap => {
-    const d = snap.val();
-    let text = "🏆 DRAW!";
-    if (d.teamA.score > d.teamB.score) text = "🏆 TEAM A WINS!";
-    if (d.teamB.score > d.teamA.score) text = "🏆 TEAM B WINS!";
-
-    db.ref("quiz").update({ state: "FINISHED" });
-
-    winnerText.textContent = text;
-    winnerScreen.classList.remove("hidden");
-    launchConfetti();
-  });
-}
-
-/***********************
- * CONFETTI
- ***********************/
-function launchConfetti() {
-  const colors = ["#00f0ff","#ffd166","#00ff99","#ff4d4d"];
-  for (let i = 0; i < 120; i++) {
-    const c = document.createElement("div");
-    c.className = "confetti";
-    c.style.left = Math.random() * 100 + "vw";
-    c.style.backgroundColor = colors[i % colors.length];
-    document.body.appendChild(c);
-    setTimeout(() => c.remove(), 3000);
-  }
-}
-
-/***********************
- * RESTART
- ***********************/
-function restartQuiz() {
-  location.reload();
-}
-
-/***********************
- * LIVE UPDATE
- ***********************/
-db.ref("quiz").on("value", snap => {
-  const d = snap.val();
-  if (!d) return;
-
-  scoreAEl.textContent = d.teamA.score;
-  scoreBEl.textContent = d.teamB.score;
-  nextBtn.disabled = d.state !== "LOCKED";
-});
-
-/***********************
- * EXPORT
- ***********************/
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
-window.restartQuiz = restartQuiz;
