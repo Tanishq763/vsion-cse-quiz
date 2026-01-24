@@ -14,48 +14,69 @@ const db = firebase.database();
 /***********************
  * QUESTIONS
  ***********************/
-const techComedyQuestions = [
+const allquestions = [
   {
-    q: "Why did the programmer go broke?",
-    o: ["Lost wallet", "Too many bugs", "Used all cache", "Couldn't save"],
+    q: "Your friend says 'Bro, trust me'. What should you do?",
+    o: ["Trust immediately", "Run away", "Double-check", "Pray first"],
+    a: 2
+  },
+  {
+    q: "What does 'I'm not angry' usually mean?",
+    o: ["All good", "Slightly annoyed", "Danger zone", "Game over"],
     a: 3
   },
   {
-    q: "What is a programmer’s favorite place to hang out?",
-    o: ["Cafe", "GitHub", "Stack Overflow", "Debug Room"],
-    a: 2
-  },
-  {
-    q: "Why do Java developers wear glasses?",
-    o: ["Style", "Eye strain", "They can’t C#", "Too much screen time"],
-    a: 2
-  },
-  {
-    q: "What happens when a programmer gets stuck?",
-    o: ["Cries", "Sleeps", "Blames compiler", "Searches Google"],
+    q: "Your friend says 'Only one episode'. What actually happens?",
+    o: ["One episode", "Two episodes", "Entire season", "No sleep"],
     a: 3
   },
   {
-    q: "Why was the developer unhappy at work?",
-    o: ["Low salary", "No coffee", "No semicolons", "Too many meetings"],
+    q: "Who replies fastest in a group chat?",
+    o: ["Class topper", "Crush", "Free friend", "Admin"],
     a: 2
   },
   {
-    q: "Best way to fix a bug?",
-    o: ["Pray", "Restart PC", "Comment code", "Google it"],
+    q: "Your friend says 'I’m outside'. Where are they?",
+    o: ["At the door", "Near the gate", "Still at home", "In another city"],
+    a: 2
+  },
+  {
+    q: "What does 'Seen 2 hours ago' mean?",
+    o: ["Busy", "No network", "Ignoring you", "Phone dead"],
+    a: 2
+  },
+  {
+    q: "Your best friend asks 'Can I have one bite?'. What happens?",
+    o: ["One bite", "Half plate gone", "Full plate gone", "Food disappears"],
     a: 3
   },
   {
-    q: "What does a programmer say when things go wrong?",
-    o: ["Oops", "It works on my machine", "Why me?", "Help!"],
-    a: 1
+    q: "What is the strongest relationship test?",
+    o: ["Long distance", "Trust issues", "Sharing food", "Group project"],
+    a: 3
   },
   {
-    q: "Why do programmers prefer dark mode?",
-    o: ["Looks cool", "Saves battery", "Light attracts bugs", "Eye safety"],
+    q: "Friend says 'I know a shortcut'. Result?",
+    o: ["Reached early", "On time", "Lost badly", "Tour of city"],
+    a: 3
+  },
+  {
+    q: "What does 'We should hang out sometime' mean?",
+    o: ["Today", "Soon", "Someday", "Never"],
+    a: 3
+  },
+  {
+    q: "Who borrows things and never returns them?",
+    o: ["Enemy", "Neighbor", "Best friend", "Stranger"],
     a: 2
+  },
+  {
+    q: "Your friend says 'Just 5 minutes more'. Actual time?",
+    o: ["5 minutes", "15 minutes", "30 minutes", "Infinite loop"],
+    a: 3
   }
 ];
+
 
 
 /***********************
@@ -253,4 +274,5 @@ db.ref("quiz").on("value", snap => {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz; // Expose the new function
+
 
