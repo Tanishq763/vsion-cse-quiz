@@ -14,61 +14,49 @@ const db = firebase.database();
 /***********************
  * QUESTIONS
  ***********************/
-const allquestions = [
-  { q:"Which symbol ends a C statement?", o:[":",".",";","?"], a:2 },
-  { q:"HTML tag for link?", o:["<a>","<link>","<url>","<href>"], a:0 },
-  { q:"CSS stands for?", o:["Creative","Cascading","Color","Coding"], a:1 },
-  { q:"JS single-line comment?", o:["#","//","<!--","**"], a:1 },
-  { q:"Which is NOT a C datatype?", o:["int","float","char","string"], a:3 },
-  { q: "Time complexity of binary search?", 
-    o: ["O(n)", "O(log n)", "O(n log n)", "O(1)"], 
-    a: 1 
+const techComedyQuestions = [
+  {
+    q: "Why did the programmer go broke?",
+    o: ["Lost wallet", "Too many bugs", "Used all cache", "Couldn't save"],
+    a: 3
   },
-  { q: "Worst-case time complexity of linear search?", 
-    o: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], 
-    a: 2 
+  {
+    q: "What is a programmer’s favorite place to hang out?",
+    o: ["Cafe", "GitHub", "Stack Overflow", "Debug Room"],
+    a: 2
   },
-  { q: "Time complexity of a loop running n times?", 
-    o: ["O(1)", "O(log n)", "O(n)", "O(n²)"], 
-    a: 2 
+  {
+    q: "Why do Java developers wear glasses?",
+    o: ["Style", "Eye strain", "They can’t C#", "Too much screen time"],
+    a: 2
   },
-  { q: "Time complexity of nested loops each running n times?", 
-    o: ["O(n)", "O(n log n)", "O(n²)", "O(log n)"], 
-    a: 2 
+  {
+    q: "What happens when a programmer gets stuck?",
+    o: ["Cries", "Sleeps", "Blames compiler", "Searches Google"],
+    a: 3
   },
-  { q: "Best-case time complexity of binary search?", 
-    o: ["O(1)", "O(log n)", "O(n)", "O(n²)"], 
-    a: 0 
+  {
+    q: "Why was the developer unhappy at work?",
+    o: ["Low salary", "No coffee", "No semicolons", "Too many meetings"],
+    a: 2
   },
-  { q: "Time complexity of merge sort?", 
-    o: ["O(n²)", "O(n log n)", "O(log n)", "O(n)"], 
-    a: 1 
+  {
+    q: "Best way to fix a bug?",
+    o: ["Pray", "Restart PC", "Comment code", "Google it"],
+    a: 3
   },
-  { q: "Worst-case time complexity of quicksort?", 
-    o: ["O(n log n)", "O(n)", "O(n²)", "O(log n)"], 
-    a: 2 
+  {
+    q: "What does a programmer say when things go wrong?",
+    o: ["Oops", "It works on my machine", "Why me?", "Help!"],
+    a: 1
   },
-  { q: "Time complexity of accessing an array element by index?", 
-    o: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], 
-    a: 2 
-  },
-  { q: "Time complexity of inserting an element at the end of an array (amortized)?", 
-    o: ["O(n)", "O(1)", "O(log n)", "O(n log n)"], 
-    a: 1 
-  },
-  { q: "Time complexity of DFS using adjacency list?", 
-    o: ["O(V)", "O(E)", "O(V + E)", "O(V²)"], 
-    a: 2 
-  },
-  { q: "Time complexity of BFS using queue?", 
-    o: ["O(V)", "O(E)", "O(V + E)", "O(V²)"], 
-    a: 2 
-  },
-  { q: "Which time complexity is the fastest?", 
-    o: ["O(n)", "O(log n)", "O(n log n)", "O(n²)"], 
-    a: 1 
+  {
+    q: "Why do programmers prefer dark mode?",
+    o: ["Looks cool", "Saves battery", "Light attracts bugs", "Eye safety"],
+    a: 2
   }
 ];
+
 
 /***********************
  * STATE
@@ -265,3 +253,4 @@ db.ref("quiz").on("value", snap => {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz; // Expose the new function
+
