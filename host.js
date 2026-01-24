@@ -15,69 +15,60 @@ const db = firebase.database();
  * QUESTIONS
  ***********************/
 const allquestions = [
-  {
-    q: "Your friend says 'Bro, trust me'. What should you do?",
-    o: ["Trust immediately", "Run away", "Double-check", "Pray first"],
-    a: 2
+  { q:"Which symbol ends a C statement?", o:[":",".",";","?"], a:2 },
+  { q:"HTML tag for link?", o:["<a>","<link>","<url>","<href>"], a:0 },
+  { q:"CSS stands for?", o:["Creative","Cascading","Color","Coding"], a:1 },
+  { q:"JS single-line comment?", o:["#","//","<!--","**"], a:1 },
+  { q:"Which is NOT a C datatype?", o:["int","float","char","string"], a:3 },
+  { q: "Time complexity of binary search?", 
+    o: ["O(n)", "O(log n)", "O(n log n)", "O(1)"], 
+    a: 1 
   },
-  {
-    q: "What does 'I'm not angry' usually mean?",
-    o: ["All good", "Slightly annoyed", "Danger zone", "Game over"],
-    a: 3
+  { q: "Worst-case time complexity of linear search?", 
+    o: ["O(1)", "O(log n)", "O(n)", "O(n log n)"], 
+    a: 2 
   },
-  {
-    q: "Your friend says 'Only one episode'. What actually happens?",
-    o: ["One episode", "Two episodes", "Entire season", "No sleep"],
-    a: 3
+  { q: "Time complexity of a loop running n times?", 
+    o: ["O(1)", "O(log n)", "O(n)", "O(n²)"], 
+    a: 2 
   },
-  {
-    q: "Who replies fastest in a group chat?",
-    o: ["Class topper", "Crush", "Free friend", "Admin"],
-    a: 2
+  { q: "Time complexity of nested loops each running n times?", 
+    o: ["O(n)", "O(n log n)", "O(n²)", "O(log n)"], 
+    a: 2 
   },
-  {
-    q: "Your friend says 'I’m outside'. Where are they?",
-    o: ["At the door", "Near the gate", "Still at home", "In another city"],
-    a: 2
+  { q: "Best-case time complexity of binary search?", 
+    o: ["O(1)", "O(log n)", "O(n)", "O(n²)"], 
+    a: 0 
   },
-  {
-    q: "What does 'Seen 2 hours ago' mean?",
-    o: ["Busy", "No network", "Ignoring you", "Phone dead"],
-    a: 2
+  { q: "Time complexity of merge sort?", 
+    o: ["O(n²)", "O(n log n)", "O(log n)", "O(n)"], 
+    a: 1 
   },
-  {
-    q: "Your best friend asks 'Can I have one bite?'. What happens?",
-    o: ["One bite", "Half plate gone", "Full plate gone", "Food disappears"],
-    a: 3
+  { q: "Worst-case time complexity of quicksort?", 
+    o: ["O(n log n)", "O(n)", "O(n²)", "O(log n)"], 
+    a: 2 
   },
-  {
-    q: "What is the strongest relationship test?",
-    o: ["Long distance", "Trust issues", "Sharing food", "Group project"],
-    a: 3
+  { q: "Time complexity of accessing an array element by index?", 
+    o: ["O(n)", "O(log n)", "O(1)", "O(n log n)"], 
+    a: 2 
   },
-  {
-    q: "Friend says 'I know a shortcut'. Result?",
-    o: ["Reached early", "On time", "Lost badly", "Tour of city"],
-    a: 3
+  { q: "Time complexity of inserting an element at the end of an array (amortized)?", 
+    o: ["O(n)", "O(1)", "O(log n)", "O(n log n)"], 
+    a: 1 
   },
-  {
-    q: "What does 'We should hang out sometime' mean?",
-    o: ["Today", "Soon", "Someday", "Never"],
-    a: 3
+  { q: "Time complexity of DFS using adjacency list?", 
+    o: ["O(V)", "O(E)", "O(V + E)", "O(V²)"], 
+    a: 2 
   },
-  {
-    q: "Who borrows things and never returns them?",
-    o: ["Enemy", "Neighbor", "Best friend", "Stranger"],
-    a: 2
+  { q: "Time complexity of BFS using queue?", 
+    o: ["O(V)", "O(E)", "O(V + E)", "O(V²)"], 
+    a: 2 
   },
-  {
-    q: "Your friend says 'Just 5 minutes more'. Actual time?",
-    o: ["5 minutes", "15 minutes", "30 minutes", "Infinite loop"],
-    a: 3
+  { q: "Which time complexity is the fastest?", 
+    o: ["O(n)", "O(log n)", "O(n log n)", "O(n²)"], 
+    a: 1 
   }
 ];
-
-
 
 /***********************
  * STATE
@@ -274,5 +265,3 @@ db.ref("quiz").on("value", snap => {
 window.startQuiz = startQuiz;
 window.nextQuestion = nextQuestion;
 window.restartQuiz = restartQuiz; // Expose the new function
-
-
